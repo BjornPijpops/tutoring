@@ -25,5 +25,7 @@ Use **Supabase Free** for Auth (Google + Azure/Microsoft OAuth), Postgres with *
 ## Consequences
 - Postgres relational model fits slots/requests; double-booking is prevented with a database constraint.
 - Free-tier limits (500 MB DB, 100 emails/day, pausing) are acceptable at this scale.
-- Email delivery to arbitrary tutees requires a verified sending domain in Resend; `onboarding@resend.dev` only works for testing/own address.
+- Emails go **only to the tutor** (access requests and timeslot requests); communication with tutees happens outside the app. Resend's shared `onboarding@resend.dev` sender can deliver to the Resend account owner's address, so **no domain is needed**. The Resend account must be registered with the tutor's email.
+- The tutor's email address is stored as a Supabase secret (`TUTOR_EMAIL`), not committed, since the repo is public.
+- The `Notifier` interface only needs `notifyTutor(event)`; there are no tutee-facing emails.
 - Microsoft login requires a free Entra app registration.
