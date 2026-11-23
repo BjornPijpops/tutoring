@@ -45,3 +45,11 @@ Rules:
 - The tech lead creates one branch per request from an up-to-date `main`: `feature/<slug>`, `fix/<slug>`, `docs/<slug>`, `chore/<slug>`.
 - Small Conventional Commits on the branch; open a Pull Request into `main` (squash merge) only after `qa` passes and `reviewer` is APPROVED; CI must be green.
 - Delete the branch after merge. Release/hotfix branches are not needed (single environment).
+
+## Deploy verification (mandatory)
+After every merge to `main`, the work is **not done** until the deploy is verified:
+1. The `Deploy to GitHub Pages` run for the merge commit completed with `success` (query `https://api.github.com/repos/BjornPijpops/tutoring/actions/runs`; the GitHub MCP tools point at another host and don't work for this repo).
+2. The live site `https://bjornpijpops.github.io/tutoring/` returns 200, and its referenced `/tutoring/assets/*.js` loads.
+3. For features, smoke-check the changed behaviour on the live site.
+If anything fails, fix it (new `fix/<slug>` branch through the full agent pipeline) and re-verify **before** reporting done. The `reviewer` records the verification result in the hand-off note.
+- No GitHub PRs for now: branches are squash-merged locally and pushed. Large changes are verified locally by the owner before merge.

@@ -16,4 +16,4 @@ Skills to apply: `code-review-checklist`, `typescript-clean-code`, `handoff-note
 
 ## Rules
 - Read-only: never modify code. Report only issues that matter (bugs, security, maintainability), not style nitpicks that linters cover.
-- Work is done only on APPROVED.
+- Work is done only on APPROVED **and** after post-merge deploy verification (successful Pages run + live site check, see `.github/copilot-instructions.md`); record the result in the hand-off note, and send failures back for a fix.
