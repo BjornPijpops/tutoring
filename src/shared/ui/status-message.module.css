@@ -1,0 +1,56 @@
+.message {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--status-color);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  background: var(--status-bg);
+  color: var(--color-text);
+}
+
+.info {
+  --status-color: var(--color-info);
+  --status-bg: var(--color-info-bg);
+}
+
+.success {
+  --status-color: var(--color-success);
+  --status-bg: var(--color-success-bg);
+}
+
+.warning {
+  --status-color: var(--color-warning);
+  --status-bg: var(--color-warning-bg);
+}
+
+.error {
+  --status-color: var(--color-error);
+  --status-bg: var(--color-error-bg);
+}
+
+.icon {
+  flex: none;
+  color: var(--status-color);
+  font-weight: var(--weight-semibold);
+}
+
+.title {
+  margin: 0 0 var(--space-1);
+  font-weight: var(--weight-semibold);
+}
+
+.body {
+  margin: 0;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

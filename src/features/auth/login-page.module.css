@@ -1,0 +1,7 @@
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 24rem;
+  margin-bottom: var(--space-6);
+}
