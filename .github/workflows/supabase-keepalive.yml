@@ -20,7 +20,7 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
     steps:
-      - name: Ping Supabase REST endpoint
+      - name: Call Supabase keepalive function
         run: |
           if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
             echo "::notice::SUPABASE_URL / SUPABASE_ANON_KEY not set; skipping keep-alive"
@@ -34,5 +34,6 @@ jobs:
               ;;
           esac
           curl --fail --silent --show-error --max-time 30 --retry 3 -o /dev/null \
-            -H "apikey: $SUPABASE_ANON_KEY" "${SUPABASE_URL%/}/rest/v1/"
+            -X POST -H "apikey: $SUPABASE_ANON_KEY" -H "Content-Type: application/json" -d '{}' \
+            "${SUPABASE_URL%/}/rest/v1/rpc/keepalive"
           echo "Keep-alive request succeeded"

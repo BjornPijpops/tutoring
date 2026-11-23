@@ -23,9 +23,9 @@ Add these to the Supabase allowed redirect URLs (and to the Google and Microsoft
 
 ## Keep-alive
 
-Free-tier projects pause after a week without activity. `.github/workflows/supabase-keepalive.yml` sends a request to `<SUPABASE_URL>/rest/v1/` twice a week. It needs two repository **secrets**, `SUPABASE_URL` and `SUPABASE_ANON_KEY`, and does nothing (and succeeds) while they are unset.
+Free-tier projects pause after a week without activity. `.github/workflows/supabase-keepalive.yml` calls the `public.keepalive()` database function (migration `20261123000000_keepalive.sql`) via `<SUPABASE_URL>/rest/v1/rpc/keepalive` twice a week. It needs two repository **secrets**, `SUPABASE_URL` and `SUPABASE_ANON_KEY`, and does nothing (and succeeds) while they are unset. The migration must be applied first (Supabase CLI `supabase db push`, or paste the SQL into the SQL Editor), otherwise the call returns 404.
 
 Caveats:
 
 - GitHub disables scheduled workflows after 60 days without repository activity.
-- Newer projects may reject the anon key on `/rest/v1/`. If the job fails with 401 or 404, change the request to a trivial table or RPC query (add a `keepalive` migration with the first backend work).
+- The anon key is rejected on the `/rest/v1/` root of newer projects, which is why a function is called instead.
