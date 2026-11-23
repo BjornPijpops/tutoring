@@ -14,6 +14,7 @@ Skills to apply: `task-breakdown-patterns`, `typescript-clean-code`, `github-pag
 - Identify reusable code to extend instead of duplicating; define coding, testing and documentation expectations.
 - Define the test plan outline for `qa` and the review focus for `reviewer`.
 - Keep CI/CD (lint, typecheck, test, build, Pages deploy) in mind.
+- **Enforce branching**: create `feature|fix|docs|chore/<slug>` from up-to-date `main` before the developer starts; verify no direct commits to `main`; ensure the work ends as a PR with squash merge after reviewer approval (see `.github/copilot-instructions.md`).
 
 ## Rules
 - Do not implement features. Edit only plan/hand-off docs.

@@ -39,4 +39,9 @@ Rules:
 ## Repo conventions
 - Agents: `.github/agents/*.agent.md`; skills: `.github/skills/<name>/SKILL.md`.
 - Docs: `docs/adr/`, `docs/design/`, `docs/handoffs/`.
-- Default branch `main`; feature branches merged after reviewer approval.
+
+## Branching (enforced by `tech-lead`)
+- `main` is protected and always deployable; **never commit directly to `main`** (the one-time agent/ADR bootstrap commits excepted).
+- The tech lead creates one branch per request from an up-to-date `main`: `feature/<slug>`, `fix/<slug>`, `docs/<slug>`, `chore/<slug>`.
+- Small Conventional Commits on the branch; open a Pull Request into `main` (squash merge) only after `qa` passes and `reviewer` is APPROVED; CI must be green.
+- Delete the branch after merge. Release/hotfix branches are not needed (single environment).
