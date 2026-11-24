@@ -1,7 +1,7 @@
 /** UTC instant as an ISO-8601 string, e.g. `2026-01-05T09:00:00Z`. */
 export type IsoDateTime = string;
 
-/** Role of a signed-in person. */
+/** Role of a signed-in person: `tutor` is the admin; everyone else is a `tutee`. */
 export type Role = 'tutor' | 'tutee';
 
 /** Minimal user profile (no email: personal data is kept to a minimum). */

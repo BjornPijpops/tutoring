@@ -1,11 +1,11 @@
-import { Container, PageHeading, StatusMessage } from '../../shared/ui';
+import { Container } from '../../shared/ui';
+import { CalendarManager } from './calendar-manager';
 
-/** Placeholder for the availability calendar. */
+/** Tutor calendar page; access is checked by the route guard and by the backend. */
 export function CalendarPage() {
   return (
     <Container>
-      <PageHeading>Calendar</PageHeading>
-      <StatusMessage status="info">The availability calendar is coming soon.</StatusMessage>
+      <CalendarManager />
     </Container>
   );
 }

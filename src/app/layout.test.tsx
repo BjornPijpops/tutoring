@@ -45,7 +45,7 @@ describe('Layout', () => {
   it('lists the navigation links and marks the current page', () => {
     renderLayout('/calendar');
     const nav = screen.getByRole('navigation', { name: 'Main' });
-    expect(nav.querySelectorAll('a')).toHaveLength(3);
+    expect(nav.querySelectorAll('a')).toHaveLength(2);
     expect(screen.getByRole('link', { name: 'Calendar' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
   });

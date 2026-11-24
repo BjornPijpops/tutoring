@@ -1,5 +1,10 @@
 export { Button, type ButtonProps } from './button';
 export { ButtonLink, type ButtonLinkProps } from './button-link';
+export { ConfirmDialog, type ConfirmDialogProps } from './confirm-dialog';
 export { Container, type ContainerProps } from './container';
+export { Dialog, type DialogProps } from './dialog';
+export { ErrorSummary, type ErrorSummaryProps, type FieldError } from './error-summary';
+export { Field, type FieldControlProps, type FieldProps } from './field';
 export { PageHeading, type PageHeadingProps } from './page-heading';
 export { StatusMessage, type Status, type StatusMessageProps } from './status-message';
+export { TextInput, type TextInputProps } from './text-input';

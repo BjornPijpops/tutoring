@@ -9,6 +9,7 @@ export const ROUTE_TITLES: Readonly<Record<string, string>> = {
   '/': 'Home',
   '/login': 'Sign in',
   '/calendar': 'Calendar',
+  '/availability': 'Availability',
 };
 
 /** Document title for a pathname, e.g. `Calendar · Tutoring`. */

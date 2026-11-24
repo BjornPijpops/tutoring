@@ -13,10 +13,28 @@ describe('createContainer', () => {
       'accessRequests',
       'auth',
       'availability',
+      'blockedTime',
+      'calendarEvents',
+      'icsParser',
       'notifier',
       'sessionRequests',
     ]);
     expect(await services.auth.getSession()).toEqual({ ok: true, value: null });
+  });
+
+  it('uses the Supabase adapters when both public values are set', () => {
+    const services = createContainer(
+      {
+        supabaseUrl: 'https://example.supabase.co',
+        supabaseAnonKey: 'public-anon-key',
+        basePath: '/tutoring/',
+      },
+      { origin: 'https://example.test' },
+    );
+
+    expect(services.auth.constructor.name).toBe('SupabaseAuthProvider');
+    expect(services.calendarEvents.constructor.name).toBe('SupabaseCalendarEventRepository');
+    expect(services.blockedTime.constructor.name).toBe('SupabaseBlockedTimeRepository');
   });
 
   it('shares slots between availability and session requests', async () => {

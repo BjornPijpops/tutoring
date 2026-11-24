@@ -53,6 +53,10 @@
   font-weight: var(--weight-semibold);
 }
 
+.main:focus-visible {
+  outline-offset: -3px;
+}
+
 .main {
   flex: 1;
 }

@@ -46,7 +46,7 @@ describe('Button', () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
-  it.each([{ disabled: true }, { loading: true }])(
+  it.each([{ disabled: true }, { loading: true }, { 'aria-disabled': true as const }])(
     'does not fire onClick when %o',
     async (props) => {
       const onClick = vi.fn();
@@ -59,6 +59,12 @@ describe('Button', () => {
       expect(onClick).not.toHaveBeenCalled();
     },
   );
+
+  it('stays focusable when aria-disabled', async () => {
+    render(<Button aria-disabled="true">Soon</Button>);
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: 'Soon' })).toHaveFocus();
+  });
 });
 
 describe('ButtonLink', () => {

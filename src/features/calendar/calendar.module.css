@@ -1,0 +1,255 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.forms {
+  display: grid;
+  gap: var(--space-8);
+}
+
+@media (min-width: 64rem) {
+  .forms {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.note,
+.muted {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.timeRow {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 24rem) {
+  .timeRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.navigator {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-6);
+}
+
+.navButtons,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.actions {
+  margin-top: var(--space-4);
+}
+
+.range {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.busy {
+  opacity: 0.6;
+}
+
+.tableView {
+  display: none;
+}
+
+.listView {
+  display: block;
+}
+
+@media (min-width: 40rem) {
+  .tableView {
+    display: block;
+  }
+
+  .listView {
+    display: none;
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--text-sm);
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border-bottom: var(--border-width) solid var(--color-border);
+  text-align: center;
+}
+
+.today {
+  border-bottom: 3px solid var(--color-primary) !important;
+}
+
+.todayWord {
+  font-weight: var(--weight-semibold);
+}
+
+.rowHead {
+  width: 5.5rem;
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-text-muted);
+  font-weight: var(--weight-regular);
+  text-align: left;
+}
+
+.cell {
+  height: 1.75rem;
+  padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blocked {
+  border-left: 4px solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+
+.partial {
+  border-left: 2px dashed var(--color-border);
+  background: var(--color-surface-alt);
+}
+
+.closed {
+  background:
+    repeating-linear-gradient(135deg, transparent 0 6px, var(--color-border-subtle) 6px 8px),
+    var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+
+.cellText {
+  font-size: var(--text-sm);
+}
+
+.daySection {
+  margin-bottom: var(--space-4);
+}
+
+.dayHeading {
+  margin: 0 0 var(--space-2);
+}
+
+.segments {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.segment {
+  padding: var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.segment-closed {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+}
+
+.segment-blocked {
+  border-left: 4px solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+
+.segmentTitle {
+  display: block;
+  color: var(--color-text-muted);
+}
+
+.events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eventItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
+}
+
+.eventTitle {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+.eventMeta {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.summary dt {
+  margin-top: var(--space-2);
+  font-weight: var(--weight-semibold);
+}
+
+.summary dd {
+  margin: 0;
+}
+
+.previewTable {
+  width: 100%;
+  margin: var(--space-4) 0;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.previewTable caption {
+  padding-bottom: var(--space-2);
+  font-weight: var(--weight-semibold);
+  text-align: left;
+}
+
+.previewTable th,
+.previewTable td {
+  padding: var(--space-2);
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.imported {
+  margin-top: var(--space-4);
+}

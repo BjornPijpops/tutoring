@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router';
 import { LoginPage } from '../features/auth/login-page';
+import { RequireRole } from '../features/auth/require-role';
 import { CalendarPage } from '../features/calendar/calendar-page';
 import { HomePage } from '../features/home/home-page';
 import { NotFoundPage } from '../features/not-found/not-found-page';
@@ -12,7 +13,18 @@ export function AppRoutes() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="login" element={<LoginPage />} />
-        <Route path="calendar" element={<CalendarPage />} />
+        <Route
+          path="calendar"
+          element={
+            <RequireRole
+              requiredRole="tutor"
+              heading="Calendar"
+              noAccessText="The calendar is only available to the tutor."
+            >
+              <CalendarPage />
+            </RequireRole>
+          }
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

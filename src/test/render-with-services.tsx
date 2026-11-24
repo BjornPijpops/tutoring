@@ -2,6 +2,7 @@ import { render, type RenderResult } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { MemoryRouter } from 'react-router';
 import { ServicesProvider } from '../app/services-context';
+import { AuthProvider } from '../features/auth/auth-provider';
 import { createContainer } from '../infrastructure/container';
 import type { Services } from '../infrastructure/container';
 
@@ -24,7 +25,9 @@ export function renderWithServices(
 ): RenderResult {
   return render(
     <ServicesProvider services={services}>
-      <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+      <AuthProvider>
+        <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+      </AuthProvider>
     </ServicesProvider>,
   );
 }

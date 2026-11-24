@@ -4,7 +4,9 @@ Backend for the tutoring site (see [ADR 0001](../docs/adr/0001-backend-supabase-
 
 ## Status
 
-Placeholder only. There is no schema yet; the first backend feature adds the Supabase client, the adapters in `src/infrastructure/supabase/` and the migrations.
+Schema: `20261123000000_keepalive.sql` (keep-alive function) and `20261124000000_calendar.sql` (admins, `calendar_events`, `is_admin()`, the `is_approved_tutee()` stub and the `get_blocked_intervals` RPC; see [ADR 0004](../docs/adr/0004-availability-calendar.md) and [ADR 0005](../docs/adr/0005-admin-identity-and-calendar-access.md)). The migration is covered by `src/infrastructure/supabase/calendar-migration.test.ts`, which runs it in an in-process Postgres (PGlite) against a stub of Supabase auth.
+
+The tutor is whoever is listed in `public.admins`. Seed it once, by hand, in the SQL Editor (see [external setup, Part 7](../docs/setup/external-setup.md)); never commit the address.
 
 ## Migrations
 
@@ -18,8 +20,8 @@ Never commit secrets. The service-role key, Resend API key and the tutor's email
 
 Add these to the Supabase allowed redirect URLs (and to the Google and Microsoft Entra apps):
 
-- `https://bjornpijpops.github.io/tutoring/`
-- `http://localhost:5173/`
+- `https://bjornpijpops.github.io/tutoring/` (the app sends `origin + base path` as `redirectTo`, so add `https://bjornpijpops.github.io/tutoring/**`)
+- `http://localhost:5173/` (and `http://localhost:5173/**` for the dev base path `/tutoring/`)
 
 ## Keep-alive
 

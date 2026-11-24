@@ -23,8 +23,11 @@ export function Button({
   type = 'button',
   disabled,
   children,
+  onClick,
   ...rest
 }: ButtonProps) {
+  // `aria-disabled` keeps the button focusable (so it can be described) but inert.
+  const ariaDisabled = rest['aria-disabled'] === true || rest['aria-disabled'] === 'true';
   return (
     <button
       {...rest}
@@ -32,6 +35,7 @@ export function Button({
       className={buttonClassName(variant, fullWidth)}
       disabled={disabled === true || loading}
       aria-busy={loading || undefined}
+      onClick={ariaDisabled ? undefined : onClick}
     >
       {loading ? <span className={styles['spinner']} aria-hidden="true" /> : null}
       {children}

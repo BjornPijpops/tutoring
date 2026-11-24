@@ -8,9 +8,10 @@ Never paste keys marked **SECRET** into the repo, a chat, or a screenshot.
 | 1. Supabase project | Saving calendar events, shared data | **Yes** |
 | 2. GitHub variables and secrets | Site connects to Supabase, keep-alive | **Yes** |
 | 3. Supabase CLI (optional) | Applying database migrations from your PC | Recommended |
-| 4. Google sign-in | Tutees logging in with Google | Later (sign-in feature) |
-| 5. Microsoft sign-in | Tutees logging in with Microsoft | Later (sign-in feature) |
+| 4. Google sign-in | Logging in with Google (the tutor, and later tutees) | **Yes** (calendar) |
+| 5. Microsoft sign-in | Tutees logging in with Microsoft | Later (shown as "coming soon") |
 | 6. Resend (email to you) | Request emails in your mailbox | Later (requests feature) |
+| 7. Calendar admin | Making your Google account the tutor | **Yes** (calendar), after Parts 3–4 |
 
 Site URL used throughout: `https://bjornpijpops.github.io/tutoring/`
 
@@ -67,7 +68,7 @@ Lets the database schema (`supabase/migrations/`) be applied reproducibly. The C
 
 If you skip this, paste the migration SQL into **Supabase → SQL Editor → Run** instead. You will be told when.
 
-## Part 4 – Google sign-in (later)
+## Part 4 – Google sign-in
 
 1. <https://console.cloud.google.com> → create a project named `tutoring`.
 2. **APIs & Services → OAuth consent screen** (Google Auth Platform): User type **External**; app name `Tutoring`; support and developer email: yours. Publish the app (**In production**) so any Google account can sign in; basic scopes (email, profile, openid) need no verification.
@@ -91,12 +92,28 @@ If you skip this, paste the migration SQL into **Supabase → SQL Editor → Run
 
 ## Part 6 – Resend, email to you (later)
 
-1. <https://resend.com> → sign up **with `pijpopsbjorn@hotmail.com`** (the shared sender only delivers to the account's own address).
+1. <https://resend.com> → sign up **with your own mailbox address** (the one that should receive the request emails; the shared sender only delivers to the account's own address).
 2. **API Keys → Create API Key** (permission: *Sending access*) → copy it (**SECRET**).
 3. In Supabase → **Edge Functions → Secrets** (or `supabase secrets set`), add:
    - `RESEND_API_KEY` = the key
-   - `TUTOR_EMAIL` = `pijpopsbjorn@hotmail.com`
+   - `TUTOR_EMAIL` = your mailbox address (same as the Resend account; never commit it, the repo is public)
 4. Sender used by the app: `onboarding@resend.dev`. After the first email arrives in Hotmail, mark it **Not junk** and add the sender to your safe senders.
+
+---
+
+## Part 7 – Calendar admin (you are the tutor)
+
+The calendar migration (`supabase/migrations/20261124000000_calendar.sql`) is applied with Part 3 (`npx supabase db push --remote`, or paste the file into the SQL Editor). It creates the `admins` table, which nobody can read or write through the website: only you, in the SQL Editor.
+
+1. In Supabase → **SQL Editor**, run this **once**, replacing the placeholder with the Google address you sign in with (keep that address out of the repo, chat and screenshots):
+
+   ```sql
+   insert into public.admins (email) values (lower('<ADMIN_GOOGLE_EMAIL>'));
+   ```
+
+2. Supabase → **Authentication → Sign In / Providers**: keep **only Google** enabled. Turn off **Email** sign-ups and **Allow anonymous sign-ins** (Authentication → Sign In / Providers, or Settings). Otherwise someone could register with an email address and, if it matched, gain access.
+3. Check **Authentication → URL Configuration** lists `https://bjornpijpops.github.io/tutoring/**` and `http://localhost:5173/**` (Part 1, step 6) and that the GitHub variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` exist (Part 2). For local development put the same two values in `.env.local`.
+4. Open the site, choose **Sign in → Continue with Google**, then **Calendar**. You should see the calendar manager; any other Google account sees "You don't have access yet".
 
 ---
 
@@ -105,4 +122,5 @@ If you skip this, paste the migration SQL into **Supabase → SQL Editor → Run
 - [ ] Part 1 done (never send keys in chat; just confirm).
 - [ ] Part 2 variables and secrets added; keep-alive run result: ____
 - [ ] Part 3 CLI installed and linked (yes / no, use SQL Editor)
-- [ ] Parts 4–6: do these when we build sign-in and requests.
+- [ ] Part 4 Google sign-in configured; Part 7 admin row inserted and email/anonymous sign-in disabled.
+- [ ] Parts 5–6: do these when we build Microsoft sign-in and requests.

@@ -20,9 +20,10 @@ describe('App', () => {
     expect(document.title).toBe('Home · Tutoring');
   });
 
-  it('renders the calendar at #/calendar', () => {
+  it('renders the sign-in gate at #/calendar when signed out', async () => {
     renderApp('#/calendar');
     expect(screen.getByRole('heading', { level: 1, name: 'Calendar' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Sign in with Google' })).toBeInTheDocument();
   });
 
   it('renders the not-found page for an unknown route', () => {
@@ -33,7 +34,7 @@ describe('App', () => {
 
   it('navigates from home to the login page via the hash', async () => {
     renderApp('#/');
-    await userEvent.click(screen.getByRole('main').querySelector('a') as HTMLElement);
+    await userEvent.click(await screen.findByRole('link', { name: 'Sign in' }));
     expect(window.location.hash).toBe('#/login');
     expect(screen.getByRole('heading', { level: 1, name: 'Sign in' })).toBeInTheDocument();
     expect(screen.getByRole('main')).toHaveFocus();

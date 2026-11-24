@@ -1,0 +1,12 @@
+.summary {
+  margin-bottom: var(--space-4);
+}
+
+.summary:focus-visible {
+  outline-offset: 4px;
+}
+
+.list {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-6);
+}

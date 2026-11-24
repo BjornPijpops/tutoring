@@ -37,9 +37,18 @@
   filter: brightness(0.95);
 }
 
-.button:disabled {
+.button:disabled,
+.button[aria-disabled='true'] {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.button[aria-disabled='true']:hover {
+  background: var(--color-surface);
+}
+
+.button.primary[aria-disabled='true']:hover {
+  background: var(--color-primary);
 }
 
 .fullWidth {

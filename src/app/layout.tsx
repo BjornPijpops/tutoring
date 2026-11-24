@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router';
+import { AuthControls, SignOutAlert } from '../features/auth/auth-controls';
 import styles from './layout.module.css';
 import { RouteFocus } from './route-focus';
 import { MAIN_ID } from './route-meta';
@@ -7,7 +8,6 @@ import { SkipLink } from './skip-link';
 const NAV_ITEMS = [
   { to: '/', label: 'Home' },
   { to: '/calendar', label: 'Calendar' },
-  { to: '/login', label: 'Sign in' },
 ] as const;
 
 /** App shell: skip link, banner with navigation, `main` outlet and footer. */
@@ -31,7 +31,9 @@ export function Layout() {
             ))}
           </ul>
         </nav>
+        <AuthControls />
       </header>
+      <SignOutAlert />
       <main id={MAIN_ID} tabIndex={-1} className={styles['main']}>
         <Outlet />
       </main>
