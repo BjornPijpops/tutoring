@@ -9,9 +9,13 @@ export interface DayListProps {
   busy: boolean;
 }
 
-const GLYPHS: Record<Segment['kind'], string> = { free: 'â–¢', blocked: 'âœ•', closed: 'â€”' };
+const GLYPHS: Record<Segment['kind'], string> = {
+  free: '\u25A2',
+  blocked: '\u2715',
+  closed: '\u2014',
+};
 const WORDS: Record<Segment['kind'], string> = {
-  free: 'Free',
+  free: '',
   blocked: 'Blocked',
   closed: 'Closed',
 };
@@ -44,8 +48,8 @@ export function DayList({ days, showTitles, busy }: DayListProps) {
                   className={`${styles['segment']} ${styles[`segment-${segment.kind}`]}`}
                 >
                   <span aria-hidden="true">{GLYPHS[segment.kind]}</span>{' '}
-                  <strong>{WORDS[segment.kind]}</strong> {formatTime(segment.startsAt)}-
-                  {endLabel(segment, day)}
+                  {WORDS[segment.kind] ? <strong>{WORDS[segment.kind]}</strong> : null}{' '}
+                  {formatTime(segment.startsAt)}-{endLabel(segment, day)}
                   {showTitles && segment.title ? (
                     <span className={styles['segmentTitle']}> {segment.title}</span>
                   ) : null}

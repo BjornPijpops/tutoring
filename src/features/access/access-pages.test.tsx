@@ -151,7 +151,7 @@ describe('RequireAccess', () => {
 
   it('lets an approved tutee in and keeps URLs free of personal data', async () => {
     renderAccess({ user: { id: 'u-2', role: 'tutee', accessState: 'approved' } }, '/availability');
-    expect(await screen.findByText('Times when the tutor is free or not.')).toBeVisible();
+    expect(await screen.findByText('Times when the tutor is not available.')).toBeVisible();
     expect(screen.getByTestId('where')).toHaveTextContent(/^\/availability$/);
   });
 });

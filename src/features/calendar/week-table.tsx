@@ -14,7 +14,7 @@ export interface WeekTableProps {
 
 function cellWords(cell: OpenCell, showTitles: boolean): { visible: string; hidden: string } {
   const range = formatTimeRange(cell.startsAt, cell.endsAt);
-  if (cell.state === 'free') return { visible: '', hidden: `Free ${range}` };
+  if (cell.state === 'free') return { visible: '', hidden: range };
   if (cell.state === 'partial') return { visible: 'Part', hidden: `Partly blocked ${range}` };
   if (showTitles && cell.title) {
     const more = cell.moreCount > 0 ? ` and ${String(cell.moreCount)} more` : '';

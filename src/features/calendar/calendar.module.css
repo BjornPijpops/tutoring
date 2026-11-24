@@ -253,3 +253,162 @@
 .imported {
   margin-top: var(--space-4);
 }
+
+.gridScroll {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-x: auto;
+}
+.gridHint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+.gridFrame {
+  --grid-time: 5.5rem;
+  --grid-head: 2.75rem;
+  --grid-row: 2.75rem;
+  position: relative;
+  min-width: 46rem;
+}
+.selectableGrid {
+  border: var(--border-width) solid var(--color-border-subtle);
+  user-select: none;
+}
+.gridHeader,
+.gridRow {
+  display: grid;
+  grid-template-columns: var(--grid-time) repeat(7, minmax(5rem, 1fr));
+}
+.gridHeader > span {
+  box-sizing: border-box;
+  height: var(--grid-head);
+  padding: var(--space-2);
+  overflow: hidden;
+  font-weight: var(--weight-semibold);
+  text-align: center;
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+.gridRow .rowHead {
+  box-sizing: border-box;
+  height: var(--grid-row);
+}
+.gridRow .cell {
+  box-sizing: border-box;
+  height: var(--grid-row);
+  padding: var(--space-2);
+  cursor: pointer;
+  /* Touch scrolling always wins: the grid never takes over a touch gesture. */
+  touch-action: pan-y;
+  transition: background-color 0.1s;
+}
+.gridRow .cell:hover {
+  background: var(--color-info-bg);
+}
+.gridRow .cell[aria-disabled='true'] {
+  cursor: default;
+}
+.gridRow .selected,
+.gridRow .selected:hover {
+  outline: 2px solid var(--color-info);
+  outline-offset: -2px;
+  background: var(--color-info-bg);
+}
+.gridRow .cell:focus-visible,
+.gridEvent:focus-visible,
+.listCell:focus-visible,
+.listEvent:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: -2px;
+}
+.eventLayer {
+  position: absolute;
+  top: var(--grid-head);
+  right: 0;
+  bottom: 0;
+  left: var(--grid-time);
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: repeat(28, var(--grid-row));
+  pointer-events: none;
+}
+.gridEvent {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: var(--space-1);
+  min-height: 0;
+  padding: var(--space-1) var(--space-2);
+  overflow: hidden;
+  border: var(--border-width) solid var(--color-border);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-align: left;
+  pointer-events: auto;
+}
+.eventName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--weight-semibold);
+}
+.overlapTag {
+  align-self: flex-start;
+  padding: 0 var(--space-1);
+  border: var(--border-width) dashed var(--color-border);
+  font-size: var(--text-sm);
+}
+.dayTimeList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.listItems {
+  display: flex;
+  flex-direction: column;
+}
+.listCell,
+.listEvent {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--tap-target);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: left;
+}
+.listEvent {
+  flex-wrap: wrap;
+  border-left: 4px solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gridRow .cell {
+    transition: none;
+  }
+}
+
+.anonymousBlocked {
+  background:
+    repeating-linear-gradient(135deg, transparent 0 6px, var(--color-border) 6px 8px),
+    var(--color-surface-alt);
+  border-left-width: 4px;
+}
+@media (prefers-contrast: more) {
+  .anonymousBlocked {
+    border: 2px solid var(--color-text);
+    background:
+      repeating-linear-gradient(135deg, transparent 0 4px, var(--color-text) 4px 7px),
+      var(--color-surface);
+  }
+}

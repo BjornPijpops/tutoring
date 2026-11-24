@@ -10,7 +10,7 @@ import type { CalendarEventRepository, PortError, PortResult } from '../../core/
 import { mapEventRows, mapSupabaseError } from './rows';
 
 const TABLE = 'calendar_events';
-const COLUMNS = 'id, starts_at, ends_at, title, source, external_id';
+const COLUMNS = 'id, starts_at, ends_at, title, source, external_id, updated_at';
 const BATCH_SIZE = 500;
 
 const UNAVAILABLE: PortError = {
@@ -69,6 +69,30 @@ export class SupabaseCalendarEventRepository implements CalendarEventRepository 
       return err(UNAVAILABLE);
     }
     return ok(added);
+  }
+
+  async updateEvent(event: CalendarEvent, expectedUpdatedAt: string): PortResult<CalendarEvent> {
+    if (event.source !== 'manual')
+      return err({ kind: 'validation', message: 'Imported events cannot be edited.' });
+    const problem = validateNewEvent(event);
+    if (problem) return err({ kind: 'validation', message: problem });
+    try {
+      const { data, error } = await this.client
+        .from(TABLE)
+        .update({ starts_at: event.startsAt, ends_at: event.endsAt, title: event.title })
+        .eq('id', event.id)
+        .eq('updated_at', expectedUpdatedAt)
+        .select(COLUMNS);
+      if (error) return err(mapSupabaseError(error));
+      const mapped = mapEventRows(data);
+      if (!mapped.ok) return mapped;
+      const updated = mapped.value[0];
+      return updated
+        ? ok(updated)
+        : err({ kind: 'conflict', message: 'This event changed. Review the times and try again.' });
+    } catch {
+      return err(UNAVAILABLE);
+    }
   }
 
   async removeEvent(id: string): PortResult<void> {

@@ -36,11 +36,33 @@ export class InMemoryCalendarEventRepository implements CalendarEventRepository 
     const added: CalendarEvent[] = [];
     for (const event of events) {
       if (event.externalId !== undefined && this.hasExternalId(event)) continue;
-      const saved: CalendarEvent = { ...event, id: this.nextId() };
+      const saved: CalendarEvent = {
+        ...event,
+        id: this.nextId(),
+        updatedAt: new Date().toISOString(),
+      };
       this.events.set(saved.id, saved);
       added.push(saved);
     }
     return Promise.resolve(ok(added));
+  }
+
+  updateEvent(event: CalendarEvent, expectedUpdatedAt: string): PortResult<CalendarEvent> {
+    const current = this.events.get(event.id);
+    if (!current) return Promise.resolve(err(notFound('Event', event.id)));
+    if (current.source !== 'manual')
+      return Promise.resolve(
+        err({ kind: 'validation', message: 'Imported events cannot be edited.' }),
+      );
+    if ((current.updatedAt ?? '') !== expectedUpdatedAt)
+      return Promise.resolve(
+        err({ kind: 'conflict', message: 'This event changed. Review the times and try again.' }),
+      );
+    const problem = validateNewEvent(event);
+    if (problem) return Promise.resolve(err({ kind: 'validation', message: problem }));
+    const updated = { ...event, updatedAt: new Date().toISOString() };
+    this.events.set(event.id, updated);
+    return Promise.resolve(ok(updated));
   }
 
   removeEvent(id: string): PortResult<void> {

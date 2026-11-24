@@ -10,6 +10,8 @@ export interface CalendarEvent extends Interval {
   readonly source: EventSource;
   /** Stable id of an imported occurrence (`UID#start`); only set for `ics` events. */
   readonly externalId?: string;
+  /** Optimistic-concurrency version returned by persistence. */
+  readonly updatedAt?: IsoDateTime;
 }
 
 /** Data needed to create an event; the repository assigns the id. */

@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router';
 import { useServices } from '../../app/services-context';
-import { startOfWeek, type IsoDate } from '../../core/domain/local-time';
+import { addDays, startOfWeek, type IsoDate } from '../../core/domain/local-time';
 import type { Interval } from '../../core/domain/interval';
 import type { PortResult } from '../../core/ports';
 import { todayInBrussels } from '../../shared/dates/brussels';
 import { Container, PageHeading } from '../../shared/ui';
+import { SelectableTimeGrid } from './selectable-time-grid';
+import { WeekNavigator } from './week-navigator';
+import type { GridBlock } from './time-grid-model';
 import { buildWeekModel, weekRange } from './calendar-view-model';
-import { WeekView, type WeekLoadState } from './week-view';
 
 interface Loaded {
   readonly key: string;
@@ -48,33 +50,65 @@ export function AvailabilityPage() {
         : null,
     [loaded],
   );
+  const blocks = useMemo<readonly GridBlock[]>(
+    () =>
+      loaded?.outcome.ok
+        ? loaded.outcome.value.map((interval, index) => ({
+            ...interval,
+            key: `availability-${String(index)}`,
+            label: 'Not available',
+            kind: 'blocked',
+            readOnly: true,
+          }))
+        : [],
+    [loaded],
+  );
   const busy = loaded?.key !== key;
-  let state: WeekLoadState = 'loading';
-  if (loaded?.outcome.ok) state = 'ready';
-  else if (loaded && !busy && !loaded.outcome.ok)
-    state = loaded.outcome.error.kind === 'forbidden' ? 'forbidden' : 'error';
-
-  if (state === 'forbidden') return <Navigate to="/access" replace state={{ accessEnded: true }} />;
-
+  const error = loaded && !busy && !loaded.outcome.ok;
+  if (error && loaded.outcome.error.kind === 'forbidden') {
+    return <Navigate to="/access" replace state={{ accessEnded: true }} />;
+  }
   return (
     <Container>
-      <PageHeading lead="Times when the tutor is free or not.">Availability</PageHeading>
-      <WeekView
-        weekStart={weekStart}
-        currentWeekStart={currentWeekStart}
-        days={days}
-        state={state}
-        busy={busy && days !== null}
-        showTitles={false}
-        empty={
-          state === 'ready' && loaded?.outcome.ok === true && loaded.outcome.value.length === 0
-        }
-        onWeekChange={setWeekStart}
-        onRetry={() => {
-          setReload((value) => value + 1);
-        }}
-        onSignOut={() => undefined}
-      />
+      <PageHeading lead="Times when the tutor is not available.">Availability</PageHeading>
+      <section aria-labelledby="availability-heading">
+        <h2 id="availability-heading">Week view</h2>
+        <p>Times are shown in Brussels time (Europe/Brussels). Calendar hours: 08:00–22:00.</p>
+        <WeekNavigator
+          weekStart={weekStart}
+          currentWeekStart={currentWeekStart}
+          onChange={setWeekStart}
+        />
+        {error ? (
+          <>
+            <p role="alert">We couldn't load the calendar. Check your connection and try again.</p>
+            <button
+              type="button"
+              onClick={() => {
+                setReload((value) => value + 1);
+              }}
+            >
+              Try again
+            </button>
+          </>
+        ) : days ? (
+          <SelectableTimeGrid
+            days={days}
+            blocks={blocks}
+            busy={busy}
+            readOnly
+            labelId="availability-heading"
+            onSelect={() => undefined}
+            onActivateBlock={() => undefined}
+            onDeleteBlock={() => undefined}
+            onShiftWeek={(delta) => {
+              setWeekStart(addDays(weekStart, delta * 7));
+            }}
+          />
+        ) : (
+          <p role="status">Loading the calendar...</p>
+        )}
+      </section>
       <p>To book a time, ask the tutor directly for now.</p>
     </Container>
   );

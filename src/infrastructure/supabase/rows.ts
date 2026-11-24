@@ -13,6 +13,7 @@ const eventRowSchema = z.object({
   title: z.string(),
   source: z.enum(['manual', 'ics']),
   external_id: z.string().nullable(),
+  updated_at: timestamp.optional(),
 });
 
 const intervalRowSchema = z.object({ starts_at: timestamp, ends_at: timestamp });
@@ -47,6 +48,7 @@ export function mapEventRows(rows: unknown): Result<readonly CalendarEvent[], Po
     title: row.title,
     source: row.source,
     ...(row.external_id === null ? {} : { externalId: row.external_id }),
+    ...(row.updated_at ? { updatedAt: canonical(row.updated_at) } : {}),
   }));
 }
 

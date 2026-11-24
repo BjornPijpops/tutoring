@@ -50,23 +50,24 @@ describe('CalendarPage', () => {
     expect(screen.getByRole('button', { name: /^Delete Dentist appointment/ })).toBeInTheDocument();
   });
 
-  it('adds a blocked time and confirms it', async () => {
+  it('creates a blocked time from an empty grid cell after confirmation', async () => {
     renderWithServices(<CalendarPage />, { services: servicesFor([]) });
-    await screen.findByText('No blocked events this week.');
-    await userEvent.type(screen.getByLabelText(/^Date/), todayInBrussels());
-    await userEvent.type(screen.getByLabelText(/^Start time/), '10:00');
-    await userEvent.type(screen.getByLabelText(/^End time/), '11:00');
+    const cell = (await screen.findAllByRole('gridcell', { name: /08:00/ }))[0] as HTMLElement;
+    await userEvent.click(cell);
+    expect(await screen.findByRole('dialog', { name: 'Create blocked time' })).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText(/^Title/), 'Piano');
-    await userEvent.click(screen.getByRole('button', { name: 'Add blocked time' }));
-    expect(await screen.findByText(/Blocked time added/)).toBeInTheDocument();
-    expect((await screen.findAllByText('Piano')).length).toBeGreaterThan(0);
+    await userEvent.click(screen.getByRole('button', { name: 'Create event' }));
+    expect(await screen.findByRole('button', { name: /Delete Piano/ })).toBeInTheDocument();
   });
 
-  it('shows an error summary for an empty form', async () => {
+  it('shows validation errors for an empty create dialog', async () => {
     renderWithServices(<CalendarPage />, { services: servicesFor([]) });
-    await userEvent.click(await screen.findByRole('button', { name: 'Add blocked time' }));
+    await userEvent.click(
+      (await screen.findAllByRole('gridcell', { name: /08:00/ }))[0] as HTMLElement,
+    );
+    await userEvent.clear(screen.getByLabelText(/^Date/));
+    await userEvent.click(screen.getByRole('button', { name: 'Create event' }));
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    expect(screen.getByLabelText(/^Date/)).toBeInvalid();
   });
 
   it('deletes an event after confirmation', async () => {
@@ -191,7 +192,11 @@ describe('AvailabilityPage', () => {
     const services = servicesFor([eventToday('e1', SECRET_TITLE)]);
     const { container } = renderWithServices(<AvailabilityPage />, { services });
     await screen.findByRole('heading', { level: 1, name: 'Availability' });
-    await screen.findAllByText(/Blocked|Closed/i);
+    await screen.findAllByRole('button', { name: /Not available/ });
     expect(container.textContent).not.toContain(SECRET_TITLE);
+    const blocked = await screen.findAllByRole('button', { name: /Not available/ });
+    expect(blocked[0]).toHaveAttribute('aria-disabled', 'true');
+    expect(blocked[0]).toHaveClass(/anonymousBlocked/);
+    expect(container.textContent).not.toMatch(/Free|create blocked time/i);
   });
 });

@@ -17,9 +17,11 @@ export interface DialogProps {
 export function Dialog({ open, title, onClose, children }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const opener = useRef<Element | null>(null);
+  const isOpen = useRef(open);
   const titleId = useId();
 
   useEffect(() => {
+    isOpen.current = open;
     const dialog = ref.current;
     if (!dialog) return;
     if (open && !dialog.open) {
@@ -32,6 +34,16 @@ export function Dialog({ open, title, onClose, children }: DialogProps) {
       }
     }
   }, [open]);
+
+  // A parent may unmount the dialog while it is open; the opener must still get focus back.
+  useEffect(
+    () => () => {
+      if (isOpen.current && opener.current instanceof HTMLElement && opener.current.isConnected) {
+        opener.current.focus();
+      }
+    },
+    [],
+  );
 
   return (
     <dialog

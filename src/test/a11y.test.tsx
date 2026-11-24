@@ -110,7 +110,7 @@ describe('accessibility (axe)', () => {
     const { container } = renderWithServices(<AvailabilityPage />, {
       services: { ...tutorServices(), auth: new InMemoryAuthProvider(TUTEE) },
     });
-    await screen.findByText('Times when the tutor is free or not.');
+    await screen.findByText('Times when the tutor is not available.');
     await expectNoViolations(container);
   });
   it('login page', async () => {
@@ -127,7 +127,11 @@ describe('accessibility (axe)', () => {
 
   it('calendar page with form errors', async () => {
     const { container } = renderWithServices(<CalendarPage />, { services: tutorServices() });
-    await userEvent.click(await screen.findByRole('button', { name: 'Add blocked time' }));
+    await userEvent.click(
+      (await screen.findAllByRole('gridcell', { name: /08:00/ }))[0] as HTMLElement,
+    );
+    await userEvent.clear(screen.getByLabelText(/^Date/));
+    await userEvent.click(screen.getByRole('button', { name: 'Create event' }));
     await screen.findByRole('alert');
     await expectNoViolations(container);
   });
@@ -169,7 +173,7 @@ describe('accessibility (axe)', () => {
     const { container } = renderWithServices(<AvailabilityPage />, {
       services: tutorServices(),
     });
-    await screen.findByRole('table');
+    await screen.findByRole('grid');
     await expectNoViolations(container);
   });
 

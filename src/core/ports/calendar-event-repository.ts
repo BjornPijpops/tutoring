@@ -6,13 +6,12 @@ import type { PortResult } from './port-error';
 export interface CalendarEventRepository {
   /** Events intersecting `range`, ordered by start. */
   listEvents(range: TimeRange): PortResult<readonly CalendarEvent[]>;
-  /**
-   * Stores events. Imported events whose `(source, externalId)` already exist are left
-   * unchanged and not returned again, so re-importing a file is idempotent.
-   */
+  /** Stores events idempotently for imported external ids. */
   addEvents(events: readonly NewCalendarEvent[]): PortResult<readonly CalendarEvent[]>;
+  /** Updates a manual event only when its version still matches. */
+  updateEvent(event: CalendarEvent, expectedUpdatedAt: string): PortResult<CalendarEvent>;
   /** Removes one event. */
   removeEvent(id: string): PortResult<void>;
-  /** Removes every event that was imported from a calendar file; manual events stay. */
+  /** Removes every event imported from a calendar file. */
   removeImportedEvents(): PortResult<void>;
 }

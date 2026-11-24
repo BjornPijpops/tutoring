@@ -32,9 +32,6 @@ function Legend() {
   return (
     <ul className={styles['legend']} aria-label="Legend">
       <li>
-        <span aria-hidden="true">▢ </span>Free (empty)
-      </li>
-      <li>
         <span aria-hidden="true">✕ </span>Blocked
       </li>
       <li>
