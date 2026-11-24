@@ -59,12 +59,11 @@ Then run **Actions → Supabase keep-alive → Run workflow** once and tell me w
 
 ## Part 3 – Supabase CLI (optional, recommended)
 
-Lets the database schema (`supabase/migrations/`) be applied reproducibly.
+Lets the database schema (`supabase/migrations/`) be applied reproducibly. The CLI is a dev dependency of this repo (no global install needed): run `npm ci` once, then use `npx supabase ...`.
 
-1. Install: `winget install Supabase.CLI` (or `scoop install supabase`).
-2. `supabase login` (opens browser).
-3. In the repo folder: `supabase link --project-ref <your-project-ref>` (asks for the database password).
-4. After migrations are added: `supabase db push`.
+1. `npx supabase login` (opens browser).
+2. In the repo folder: `npx supabase link --project-ref <your-project-ref>` (asks for the database password).
+3. Apply migrations: `npx supabase db push`.
 
 If you skip this, paste the migration SQL into **Supabase → SQL Editor → Run** instead. You will be told when.
 

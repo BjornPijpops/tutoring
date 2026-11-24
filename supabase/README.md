@@ -8,7 +8,7 @@ Placeholder only. There is no schema yet; the first backend feature adds the Sup
 
 ## Migrations
 
-SQL migrations (including RLS policies) live in `migrations/`, named `<timestamp>_<description>.sql`, and are applied with the Supabase CLI.
+SQL migrations (including RLS policies) live in `migrations/`, named `<timestamp>_<description>.sql`, and are applied with the Supabase CLI, which is a dev dependency: `npx supabase login`, `npx supabase link --project-ref <ref>`, then `npx supabase db push`.
 
 ## Secrets
 
