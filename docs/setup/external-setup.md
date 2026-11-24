@@ -63,7 +63,7 @@ Lets the database schema (`supabase/migrations/`) be applied reproducibly. The C
 
 1. `npx supabase login` (opens browser).
 2. In the repo folder: `npx supabase link --project-ref <your-project-ref>` (asks for the database password).
-3. Apply migrations: `npx supabase db push`.
+3. Apply migrations: `npx supabase db push --remote`. Without `--remote`, CLI v3 targets a local Docker database and fails with `ECONNREFUSED 127.0.0.1:54322`. If `--remote` fails to connect (IPv6-only direct host on some networks), use the Session pooler string from the dashboard's **Connect** button: `npx supabase db push --db-url "<string>"`.
 
 If you skip this, paste the migration SQL into **Supabase → SQL Editor → Run** instead. You will be told when.
 
