@@ -1,6 +1,6 @@
 # 0005 – Admin identity (Google) and calendar access control
 
-**Status**: Accepted (2026-11-24)
+**Status**: Accepted (2026-11-24). §4 stub and §5 "tutee view disabled" amended by ADR 0006 (access requests).
 
 ## Context
 Google sign-in is configured in Supabase; Microsoft is deferred (no Azure account). The admin is one specific Google account. **The repository is public, so the admin's email address must never be committed** (code, SQL migrations, tests, docs, workflows). The access-approval feature (tutee requests, tutor approves) does not exist yet. Supabase's anon key is public by design, so the database must be safe against anyone holding it (ADR 0001: authorization lives in RLS).

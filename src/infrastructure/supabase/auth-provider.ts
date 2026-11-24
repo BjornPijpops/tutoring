@@ -1,7 +1,10 @@
 import type { Session as SupabaseSession, SupabaseClient } from '@supabase/supabase-js';
 import { err, ok } from '../../core/domain/result';
-import type { Session, SignInProvider } from '../../core/domain/user';
+import type { Identity, Session, SignInProvider } from '../../core/domain/user';
 import type { AuthProvider, PortError, PortResult, Unsubscribe } from '../../core/ports';
+import { mapMyAccess, type MyAccess } from './access-rows';
+
+const NO_ACCESS: MyAccess = { isAdmin: false, accessState: 'none' };
 
 const NETWORK_ERROR: PortError = {
   kind: 'unavailable',
@@ -19,8 +22,9 @@ function isNetworkError(error: { readonly name?: string }): boolean {
 
 /**
  * {@link AuthProvider} backed by Supabase Auth (Google only, PKCE).
- * The role is decided by the server through `rpc('is_admin')`; the client never reads
- * the e-mail address or user metadata, and any failure to ask means "not the tutor".
+ * The role and access state are decided by the server through `rpc('get_my_access')`; user
+ * metadata is never used for them, and any failure to ask means "not the tutor, no request".
+ * The e-mail address is only exposed through {@link getIdentity}, to show it back to the user.
  */
 export class SupabaseAuthProvider implements AuthProvider {
   constructor(
@@ -33,8 +37,20 @@ export class SupabaseAuthProvider implements AuthProvider {
       const { data, error } = await this.client.auth.getSession();
       if (error) return err(isNetworkError(error) ? NETWORK_ERROR : FAILED);
       if (!data.session) return ok(null);
-      const isAdmin = await this.isAdmin();
-      return isAdmin === undefined ? err(NETWORK_ERROR) : ok(toSession(data.session, isAdmin));
+      const access = await this.myAccess();
+      return access === undefined ? err(NETWORK_ERROR) : ok(toSession(data.session, access));
+    } catch {
+      return err(NETWORK_ERROR);
+    }
+  }
+
+  async getIdentity(): PortResult<Identity | null> {
+    try {
+      const { data, error } = await this.client.auth.getSession();
+      if (error) return err(isNetworkError(error) ? NETWORK_ERROR : FAILED);
+      const user = data.session?.user;
+      if (!user) return ok(null);
+      return user.email ? ok(toIdentity(user.email, user.user_metadata)) : err(FAILED);
     } catch {
       return err(NETWORK_ERROR);
     }
@@ -78,21 +94,36 @@ export class SupabaseAuthProvider implements AuthProvider {
 
   private async resolve(supabaseSession: SupabaseSession | null): Promise<Session | null> {
     if (!supabaseSession) return null;
-    return toSession(supabaseSession, (await this.isAdmin()) ?? false);
+    return toSession(supabaseSession, (await this.myAccess()) ?? NO_ACCESS);
   }
 
   /** `undefined` when the server could not be asked. */
-  private async isAdmin(): Promise<boolean | undefined> {
+  private async myAccess(): Promise<MyAccess | undefined> {
     try {
-      const response = await this.client.rpc('is_admin');
+      const response = await this.client.rpc('get_my_access');
       const data: unknown = response.data;
-      return response.error ? undefined : data === true;
+      return response.error ? undefined : mapMyAccess(data);
     } catch {
       return undefined;
     }
   }
 }
 
-function toSession(supabaseSession: SupabaseSession, isAdmin: boolean): Session {
-  return { user: { id: supabaseSession.user.id, role: isAdmin ? 'tutor' : 'tutee' } };
+function toSession(supabaseSession: SupabaseSession, access: MyAccess): Session {
+  return {
+    user: {
+      id: supabaseSession.user.id,
+      role: access.isAdmin ? 'tutor' : 'tutee',
+      accessState: access.accessState,
+    },
+  };
+}
+
+/** Name and e-mail of the signed-in Google account; shown to the user, never used for access. */
+function toIdentity(email: string, metadata: unknown): Identity {
+  const meta = typeof metadata === 'object' && metadata !== null ? metadata : {};
+  const name = 'full_name' in meta ? meta.full_name : 'name' in meta ? meta.name : undefined;
+  return typeof name === 'string' && name.trim() !== ''
+    ? { displayName: name.trim().slice(0, 100), email }
+    : { email };
 }

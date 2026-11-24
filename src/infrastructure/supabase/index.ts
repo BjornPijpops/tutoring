@@ -1,3 +1,4 @@
+export { SupabaseAccessRequestRepository } from './access-request-repository';
 export { SupabaseAuthProvider } from './auth-provider';
 export { SupabaseBlockedTimeRepository } from './blocked-time-repository';
 export { SupabaseCalendarEventRepository } from './calendar-event-repository';

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Navigate } from 'react-router';
 import { useServices } from '../../app/services-context';
 import { startOfWeek, type IsoDate } from '../../core/domain/local-time';
 import type { Interval } from '../../core/domain/interval';
@@ -15,8 +16,8 @@ interface Loaded {
 }
 
 /**
- * Availability for tutees: only free, blocked and closed times, never event titles.
- * Not routed yet; see `TUTEE_CALENDAR_ENABLED`.
+ * Availability for approved tutees (and the tutor): only free, blocked and closed times,
+ * never event titles. If the server says access ended, the user is sent to `/access`.
  */
 export function AvailabilityPage() {
   const { blockedTime } = useServices();
@@ -53,9 +54,11 @@ export function AvailabilityPage() {
   else if (loaded && !busy && !loaded.outcome.ok)
     state = loaded.outcome.error.kind === 'forbidden' ? 'forbidden' : 'error';
 
+  if (state === 'forbidden') return <Navigate to="/access" replace state={{ accessEnded: true }} />;
+
   return (
     <Container>
-      <PageHeading>Availability</PageHeading>
+      <PageHeading lead="Times when the tutor is free or not.">Availability</PageHeading>
       <WeekView
         weekStart={weekStart}
         currentWeekStart={currentWeekStart}
@@ -72,6 +75,7 @@ export function AvailabilityPage() {
         }}
         onSignOut={() => undefined}
       />
+      <p>To book a time, ask the tutor directly for now.</p>
     </Container>
   );
 }

@@ -1,10 +1,17 @@
 export { Button, type ButtonProps } from './button';
 export { ButtonLink, type ButtonLinkProps } from './button-link';
+export { CharacterCounter, type CharacterCounterProps } from './character-counter';
 export { ConfirmDialog, type ConfirmDialogProps } from './confirm-dialog';
 export { Container, type ContainerProps } from './container';
+export { DefinitionList, type DefinitionListProps } from './definition-list';
 export { Dialog, type DialogProps } from './dialog';
+export { EmptyState, type EmptyStateProps } from './empty-state';
 export { ErrorSummary, type ErrorSummaryProps, type FieldError } from './error-summary';
 export { Field, type FieldControlProps, type FieldProps } from './field';
+export { FilterTabs, type FilterOption, type FilterTabsProps } from './filter-tabs';
 export { PageHeading, type PageHeadingProps } from './page-heading';
+export { StatusAnnouncer, type StatusAnnouncerProps } from './status-announcer';
+export { StatusBadge, type StatusBadgeProps } from './status-badge';
 export { StatusMessage, type Status, type StatusMessageProps } from './status-message';
+export { TextArea, type TextAreaProps } from './text-area';
 export { TextInput, type TextInputProps } from './text-input';

@@ -15,7 +15,7 @@ import { createTestServices, renderWithServices } from '../../test/render-with-s
 import { AvailabilityPage } from './availability-page';
 import { CalendarPage } from './calendar-page';
 
-const TUTOR: Session = { user: { id: 't', role: 'tutor' } };
+const TUTOR: Session = { user: { id: 't', role: 'tutor', accessState: 'none' } };
 const SECRET_TITLE = 'Dentist appointment';
 
 function eventToday(id: string, title: string): CalendarEvent {

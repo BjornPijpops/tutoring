@@ -4,13 +4,13 @@ Personal tutoring website. Tutees sign in with a Google or Microsoft account and
 
 Live site: <https://bjornpijpops.github.io/tutoring/>
 
-> Status: the tutor can sign in with Google and manage a blocked-time calendar (manual entries and `.ics` import) backed by Supabase with row-level security. The tutee availability view, access requests and session requests are not built yet.
+> Status: the tutor can sign in with Google and manage a blocked-time calendar (manual entries and `.ics` import) backed by Supabase with row-level security. Tutees can request access, the tutor approves or denies them (emailed through a Supabase Edge Function), and approved tutees see a read-only availability view. Session requests are not built yet.
 
 ## Stack
 
 React 19, TypeScript (strict), Vite, React Router (`HashRouter`), TanStack Query, zod, CSS Modules with CSS variables, Vitest and Testing Library, ESLint and Prettier. Backend: Supabase (Postgres, Auth with Google PKCE, RLS). Dates: date-fns with `@date-fns/tz`; ICS import: `ical.js` (lazy-loaded). Hosting: GitHub Pages via GitHub Actions.
 
-Decisions are recorded in [`docs/adr/`](docs/adr): [0001 backend](docs/adr/0001-backend-supabase-resend.md), [0002 frontend stack](docs/adr/0002-frontend-stack.md), [0003 app architecture](docs/adr/0003-app-architecture.md), [0004 availability calendar](docs/adr/0004-availability-calendar.md), [0005 admin identity and calendar access](docs/adr/0005-admin-identity-and-calendar-access.md).
+Decisions are recorded in [`docs/adr/`](docs/adr): [0001 backend](docs/adr/0001-backend-supabase-resend.md), [0002 frontend stack](docs/adr/0002-frontend-stack.md), [0003 app architecture](docs/adr/0003-app-architecture.md), [0004 availability calendar](docs/adr/0004-availability-calendar.md), [0005 admin identity and calendar access](docs/adr/0005-admin-identity-and-calendar-access.md), [0006 access requests and approval](docs/adr/0006-access-requests-and-approval.md), [0007 access request email notification](docs/adr/0007-access-request-email-notification.md).
 
 ## Prerequisites
 
@@ -76,9 +76,9 @@ Three workflows in `.github/workflows/`, with actions pinned to commit SHAs:
 
 ### One-time setup (repository owner)
 
-1. Settings Ã¢â€ â€™ Pages Ã¢â€ â€™ Source: **GitHub Actions**.
-2. Settings Ã¢â€ â€™ Secrets and variables Ã¢â€ â€™ Actions Ã¢â€ â€™ **Variables**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (public values, optional for now).
-3. Same page Ã¢â€ â€™ **Secrets**: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (used only by the keep-alive workflow).
+1. Settings -> Pages -> Source: **GitHub Actions**.
+2. Settings -> Secrets and variables -> Actions -> **Variables**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (public values).
+3. Same page -> **Secrets**: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (used only by the keep-alive workflow).
 4. Protect `main` and require the CI check.
 5. In Supabase, allow the redirect URLs listed in [`supabase/README.md`](supabase/README.md).
 

@@ -12,7 +12,9 @@ describe('InMemoryAuthProvider', () => {
 
     await auth.signIn('google');
     expect(await auth.getSession()).toMatchObject({ ok: true, value: { user: { role: 'tutee' } } });
-    expect(listener).toHaveBeenLastCalledWith({ user: { id: 'user-1', role: 'tutee' } });
+    expect(listener).toHaveBeenLastCalledWith({
+      user: { id: 'user-1', role: 'tutee', accessState: 'none' },
+    });
 
     await auth.signOut();
     expect(listener).toHaveBeenLastCalledWith(null);

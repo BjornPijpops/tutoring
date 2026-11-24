@@ -14,6 +14,8 @@ export const SIGN_IN_PROBLEM_TEXT: Readonly<Record<SignInProblem, string>> = {
 export interface RequireAuthProps {
   /** Page heading shown while the page itself is not available. */
   heading: string;
+  /** Replaces the default sign-in prompt. */
+  signInText?: string;
   children: ReactNode;
 }
 
@@ -21,7 +23,7 @@ export interface RequireAuthProps {
  * Shows `children` to signed-in users only. This is a usability guard: the data behind it is
  * protected by the backend (RLS), so nothing is fetched while this renders a gate.
  */
-export function RequireAuth({ heading, children }: RequireAuthProps) {
+export function RequireAuth({ heading, signInText, children }: RequireAuthProps) {
   const { state, signIn, signingIn, signInProblem } = useAuth();
   if (state.status === 'signed-in') return <>{children}</>;
 
@@ -36,7 +38,7 @@ export function RequireAuth({ heading, children }: RequireAuthProps) {
       ) : null}
       {state.status === 'signed-out' ? (
         <>
-          <p>Sign in to see the {heading.toLowerCase()}.</p>
+          <p>{signInText ?? `Sign in to see the ${heading.toLowerCase()}.`}</p>
           {signInProblem ? (
             <StatusMessage status="error">{SIGN_IN_PROBLEM_TEXT[signInProblem]}</StatusMessage>
           ) : null}

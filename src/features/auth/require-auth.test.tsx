@@ -11,8 +11,8 @@ import { AuthControls } from './auth-controls';
 import { RequireAuth } from './require-auth';
 import { RequireRole } from './require-role';
 
-const TUTOR: Session = { user: { id: 't', role: 'tutor' } };
-const TUTEE: Session = { user: { id: 'u', role: 'tutee' } };
+const TUTOR: Session = { user: { id: 't', role: 'tutor', accessState: 'none' } };
+const TUTEE: Session = { user: { id: 'u', role: 'tutee', accessState: 'approved' } };
 
 function servicesWith(auth: AuthProvider) {
   return { ...createTestServices(), auth };
@@ -87,18 +87,26 @@ describe('AuthProvider OAuth callback', () => {
     window.location.hash = '';
   });
 
-  it('goes to the calendar and removes the query on a successful callback', async () => {
-    window.history.replaceState(null, '', '/?code=oauth-code');
-    renderWithServices(
-      <RequireAuth heading="Calendar">
-        <p>secret</p>
-      </RequireAuth>,
-    );
-    await waitFor(() => {
-      expect(window.location.hash).toBe('#/calendar');
-    });
-    expect(window.location.search).toBe('');
-  });
+  it.each([
+    ['the tutor', TUTOR, '#/calendar'],
+    ['an approved tutee', TUTEE, '#/availability'],
+    ['a tutee without access', { user: { ...TUTEE.user, accessState: 'none' } }, '#/access'],
+  ] as const)(
+    'goes to the home page of %s and removes the query on a successful callback',
+    async (_name, session, hash) => {
+      window.history.replaceState(null, '', '/?code=oauth-code');
+      renderWithServices(
+        <RequireAuth heading="Calendar">
+          <p>secret</p>
+        </RequireAuth>,
+        { services: { ...createTestServices(), auth: new InMemoryAuthProvider(session) } },
+      );
+      await waitFor(() => {
+        expect(window.location.hash).toBe(hash);
+      });
+      expect(window.location.search).toBe('');
+    },
+  );
   it('goes to the login page and removes the query on a cancelled callback', async () => {
     window.history.replaceState(null, '', '/?error=access_denied');
     renderWithServices(

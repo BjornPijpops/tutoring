@@ -18,10 +18,15 @@ import {
   InMemoryBlockedTimeRepository,
   InMemoryCalendarEventRepository,
 } from './in-memory-calendar';
+import { Layout } from '../app/layout';
+import { AccessPage } from '../features/access/access-page';
+import { AccessRequestsPage } from '../features/access/access-requests-page';
+import { createAccessServices } from './in-memory-access';
 import { createTestServices, renderWithServices } from './render-with-services';
 
-const TUTOR: Session = { user: { id: 't', role: 'tutor' } };
-const TUTEE: Session = { user: { id: 'u', role: 'tutee' } };
+const TUTOR: Session = { user: { id: 't', role: 'tutor', accessState: 'none' } };
+const NO_REQUEST: Session = { user: { id: 'n', role: 'tutee', accessState: 'none' } };
+const TUTEE: Session = { user: { id: 'u', role: 'tutee', accessState: 'approved' } };
 
 function tutorServices() {
   const day = todayInBrussels();
@@ -47,14 +52,65 @@ function tutorServices() {
 describe('accessibility (axe)', () => {
   it('home page signed-in states', async () => {
     const { container } = renderWithServices(<HomePage />, { services: tutorServices() });
-    await screen.findByText('You are signed in as the tutor.');
+    await screen.findByText('Manage your calendar and access requests.');
     await expectNoViolations(container);
   });
 
   it('home page without access', async () => {
-    const services = { ...createTestServices(), auth: new InMemoryAuthProvider(TUTEE) };
+    const services = { ...createTestServices(), auth: new InMemoryAuthProvider(NO_REQUEST) };
     const { container } = renderWithServices(<HomePage />, { services });
-    await screen.findByText('You are signed in, but the tutor has not given you access yet.');
+    await screen.findByText(/Ask for access to see my availability/);
+    await expectNoViolations(container);
+  });
+
+  it('access page: form, pending and denied states', async () => {
+    const first = createAccessServices(NO_REQUEST);
+    const form = renderWithServices(<AccessPage />, { services: first.services });
+    await screen.findByText('alex@example.test');
+    await expectNoViolations(form.container);
+    form.unmount();
+
+    const second = createAccessServices(NO_REQUEST);
+    await second.repo.as({ id: 'n', role: 'tutee' }).requestAccess('Hello');
+    const pending = renderWithServices(<AccessPage />, { services: second.services });
+    await screen.findByRole('heading', { level: 1, name: 'Request sent' });
+    await expectNoViolations(pending.container);
+    pending.unmount();
+
+    await second.repo.decide('n', 'denied');
+    const denied = renderWithServices(<AccessPage />, { services: second.services });
+    await screen.findByRole('heading', { level: 1, name: 'No access right now' });
+    await expectNoViolations(denied.container);
+  });
+
+  it('access requests page with a list and the revoke dialog', async () => {
+    const { services, repo } = createAccessServices(TUTOR);
+    await repo.as({ id: 'a', role: 'tutee' }).requestAccess('Hi');
+    await repo.as({ id: 'b', role: 'tutee' }).requestAccess('');
+    await repo.decide('b', 'approved');
+    const { container } = renderWithServices(<AccessRequestsPage />, { services });
+    await screen.findByRole('button', { name: /^Approve / });
+    await expectNoViolations(container);
+    await userEvent.click(screen.getByRole('button', { name: /Approved/ }));
+    await userEvent.click(await screen.findByRole('button', { name: /^Revoke access for / }));
+    await expectNoViolations(await screen.findByRole('dialog'));
+  });
+
+  it('layout with the tutor navigation and pending badge', async () => {
+    const { services, repo } = createAccessServices({
+      user: { id: 'user-1', role: 'tutor', accessState: 'none' },
+    });
+    await repo.as({ id: 'a', role: 'tutee' }).requestAccess('');
+    const { container } = renderWithServices(<Layout />, { services });
+    await screen.findByRole('link', { name: /^Access requests/ });
+    await expectNoViolations(container);
+  });
+
+  it('availability page for an approved tutee', async () => {
+    const { container } = renderWithServices(<AvailabilityPage />, {
+      services: { ...tutorServices(), auth: new InMemoryAuthProvider(TUTEE) },
+    });
+    await screen.findByText('Times when the tutor is free or not.');
     await expectNoViolations(container);
   });
   it('login page', async () => {

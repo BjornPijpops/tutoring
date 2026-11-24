@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Session, SignInProvider } from '../../core/domain/user';
+import { homeTarget } from '../../app/nav';
 import { useServices } from '../../app/services-context';
 import { readOAuthCallback } from './callback';
 
@@ -29,6 +30,8 @@ export interface AuthContextValue {
   readonly signOutFailed: boolean;
   /** Starts sign-in; redirect-based providers leave the page. */
   signIn: (provider: SignInProvider) => Promise<void>;
+  /** Asks the server again for the role and access state (they can change at any time). */
+  refresh: () => Promise<void>;
   /** Ends the session; resolves to whether it worked. */
   signOut: () => Promise<boolean>;
 }
@@ -76,7 +79,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // getSession resolves after the code exchange, so the query can go now.
       if (callback.outcome === 'success') {
         removeCallbackParams();
-        window.location.hash = '#/calendar';
+        const target = result.ok && result.value ? homeTarget(result.value.user) : '/';
+        window.location.hash = `#${target}`;
       }
       setState(result.ok ? toState(result.value) : { status: 'error' });
     });
@@ -102,6 +106,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [auth],
   );
 
+  const refresh = useCallback(async () => {
+    const result = await auth.getSession();
+    // A failed check keeps what is shown; the server enforces access anyway.
+    if (result.ok) setState(toState(result.value));
+  }, [auth]);
+
+  const signedIn = state.status === 'signed-in';
+  useEffect(() => {
+    if (!signedIn) return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void refresh();
+    };
+    const onFocus = () => {
+      void refresh();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [signedIn, refresh]);
+
   const signOut = useCallback(async () => {
     setSignOutFailed(false);
     const result = await auth.signOut();
@@ -115,8 +142,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [auth]);
 
   const value = useMemo(
-    () => ({ state, signingIn, signInProblem, signOutFailed, signIn, signOut }),
-    [state, signingIn, signInProblem, signOutFailed, signIn, signOut],
+    () => ({ state, signingIn, signInProblem, signOutFailed, signIn, signOut, refresh }),
+    [state, signingIn, signInProblem, signOutFailed, signIn, signOut, refresh],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

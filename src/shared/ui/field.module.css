@@ -43,3 +43,7 @@
   border-color: var(--color-error);
   border-width: 2px;
 }
+
+.textarea {
+  resize: vertical;
+}

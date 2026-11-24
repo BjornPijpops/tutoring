@@ -20,6 +20,7 @@ import {
   InMemorySessionRequestRepository,
 } from './memory';
 import {
+  SupabaseAccessRequestRepository,
   SupabaseAuthProvider,
   SupabaseBlockedTimeRepository,
   SupabaseCalendarEventRepository,
@@ -47,8 +48,8 @@ export interface ContainerEnvironment {
 
 /**
  * Composition root: builds the services for the given configuration.
- * Auth and calendar data use Supabase when `supabaseUrl` and `supabaseAnonKey` are set,
- * otherwise in-memory adapters; the not-yet-built features always use in-memory ones.
+ * Auth, access requests and calendar data use Supabase when `supabaseUrl` and `supabaseAnonKey`
+ * are set, otherwise in-memory adapters; the not-yet-built features always use in-memory ones.
  */
 export function createContainer(
   config: AppConfig,
@@ -63,7 +64,9 @@ export function createContainer(
     auth: client
       ? new SupabaseAuthProvider(client, `${origin}${config.basePath}`)
       : new InMemoryAuthProvider(),
-    accessRequests: new InMemoryAccessRequestRepository(),
+    accessRequests: client
+      ? new SupabaseAccessRequestRepository(client)
+      : new InMemoryAccessRequestRepository(),
     availability,
     calendarEvents: client ? new SupabaseCalendarEventRepository(client) : memoryCalendarEvents,
     blockedTime: client

@@ -1,9 +1,12 @@
 import { ok } from '../../core/domain/result';
-import type { Session, SignInProvider } from '../../core/domain/user';
+import type { Identity, Session, SignInProvider } from '../../core/domain/user';
 import type { AuthProvider, PortResult, Unsubscribe } from '../../core/ports';
 
 /** Session created by {@link InMemoryAuthProvider.signIn} unless another one is given. */
-const FAKE_TUTEE_SESSION: Session = { user: { id: 'user-1', role: 'tutee' } };
+const FAKE_TUTEE_SESSION: Session = { user: { id: 'user-1', role: 'tutee', accessState: 'none' } };
+
+/** Account shown by {@link InMemoryAuthProvider.getIdentity} unless another one is given. */
+const FAKE_IDENTITY: Identity = { displayName: 'Alex Example', email: 'alex@example.test' };
 
 /** In-memory {@link AuthProvider}: signing in with any provider creates a fake session. */
 export class InMemoryAuthProvider implements AuthProvider {
@@ -12,10 +15,15 @@ export class InMemoryAuthProvider implements AuthProvider {
   constructor(
     private session: Session | null = null,
     private readonly signInSession: Session = FAKE_TUTEE_SESSION,
+    private readonly identity: Identity = FAKE_IDENTITY,
   ) {}
 
   getSession(): PortResult<Session | null> {
     return Promise.resolve(ok(this.session));
+  }
+
+  getIdentity(): PortResult<Identity | null> {
+    return Promise.resolve(ok(this.session ? this.identity : null));
   }
 
   signIn(_provider: SignInProvider): PortResult<void> {
@@ -26,6 +34,11 @@ export class InMemoryAuthProvider implements AuthProvider {
   signOut(): PortResult<void> {
     this.update(null);
     return Promise.resolve(ok(undefined));
+  }
+
+  /** Simulates the server-side state changing, e.g. the tutor approving the user. */
+  setSession(session: Session | null): void {
+    this.session = session;
   }
 
   onSessionChange(listener: (session: Session | null) => void): Unsubscribe {

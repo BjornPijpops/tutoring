@@ -35,6 +35,7 @@ describe('createContainer', () => {
     expect(services.auth.constructor.name).toBe('SupabaseAuthProvider');
     expect(services.calendarEvents.constructor.name).toBe('SupabaseCalendarEventRepository');
     expect(services.blockedTime.constructor.name).toBe('SupabaseBlockedTimeRepository');
+    expect(services.accessRequests.constructor.name).toBe('SupabaseAccessRequestRepository');
   });
 
   it('shares slots between availability and session requests', async () => {

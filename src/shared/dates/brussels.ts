@@ -37,6 +37,11 @@ export function formatTimeRange(startsAt: IsoDateTime, endsAt: IsoDateTime): str
   return `${formatTime(startsAt)}-${formatTime(endsAt)}`;
 }
 
+/** "Tue 24 Nov, 14:05" in Brussels time. */
+export function formatMoment(instant: IsoDateTime): string {
+  return `${formatDayLabel(localDateOf(instant, TUTOR_TIME_ZONE))}, ${formatTime(instant)}`;
+}
+
 /** "Tue 24 Nov, 14:00-15:30", or both dates when the event spans days. */
 export function formatEventWhen(startsAt: IsoDateTime, endsAt: IsoDateTime): string {
   const startDate = localDateOf(startsAt, TUTOR_TIME_ZONE);

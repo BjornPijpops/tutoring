@@ -5,5 +5,5 @@ export type { BlockedTimeRepository } from './blocked-time-repository';
 export type { CalendarEventRepository } from './calendar-event-repository';
 export type { IcsParseOptions, IcsParser } from './ics-parser';
 export type { Notifier } from './notifier';
-export type { PortError, PortResult, Unsubscribe } from './port-error';
+export type { ConflictCode, PortError, PortResult, Unsubscribe } from './port-error';
 export type { SessionRequestRepository } from './session-request-repository';

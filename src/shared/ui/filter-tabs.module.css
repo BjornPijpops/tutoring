@@ -1,0 +1,26 @@
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block: var(--space-4);
+}
+
+.option {
+  min-height: var(--tap-target);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.option:hover {
+  background: var(--color-surface-alt);
+}
+
+.option[aria-pressed='true'] {
+  border-bottom: 3px solid var(--color-primary);
+  font-weight: var(--weight-semibold);
+}

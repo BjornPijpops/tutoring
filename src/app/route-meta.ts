@@ -9,6 +9,8 @@ export const ROUTE_TITLES: Readonly<Record<string, string>> = {
   '/': 'Home',
   '/login': 'Sign in',
   '/calendar': 'Calendar',
+  '/access': 'Request access',
+  '/access-requests': 'Access requests',
   '/availability': 'Availability',
 };
 

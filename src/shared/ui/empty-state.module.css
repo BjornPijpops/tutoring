@@ -1,0 +1,10 @@
+.empty {
+  padding: var(--space-6) var(--space-4);
+  border: var(--border-width) dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.text {
+  margin: 0;
+  color: var(--color-text-muted);
+}

@@ -1,17 +1,20 @@
 import { Link, NavLink, Outlet } from 'react-router';
+import { usePendingCount } from '../features/access/pending-count';
+import { useAuth } from '../features/auth/auth-provider';
 import { AuthControls, SignOutAlert } from '../features/auth/auth-controls';
+import { StatusBadge } from '../shared/ui';
+import { getNavItems } from './nav';
 import styles from './layout.module.css';
 import { RouteFocus } from './route-focus';
 import { MAIN_ID } from './route-meta';
 import { SkipLink } from './skip-link';
 
-const NAV_ITEMS = [
-  { to: '/', label: 'Home' },
-  { to: '/calendar', label: 'Calendar' },
-] as const;
-
 /** App shell: skip link, banner with navigation, `main` outlet and footer. */
 export function Layout() {
+  const { state } = useAuth();
+  const user = state.status === 'signed-in' ? state.session.user : null;
+  const pendingCount = usePendingCount(user?.role === 'tutor');
+  const navItems = getNavItems(user, pendingCount);
   return (
     <div className={styles['page']}>
       <RouteFocus />
@@ -22,10 +25,20 @@ export function Layout() {
         </Link>
         <nav aria-label="Main">
           <ul className={styles['navList']}>
-            {NAV_ITEMS.map(({ to, label }) => (
+            {navItems.map(({ to, label, pendingCount: pending }) => (
               <li key={to}>
                 <NavLink to={to} end className={styles['navLink']}>
                   {label}
+                  {pending ? (
+                    <>
+                      <span className="visually-hidden">{`, ${String(pending)} pending`}</span>
+                      <span className={styles['badge']}>
+                        <StatusBadge status="info" decorative>
+                          {String(pending)}
+                        </StatusBadge>
+                      </span>
+                    </>
+                  ) : null}
                 </NavLink>
               </li>
             ))}

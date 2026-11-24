@@ -13,7 +13,7 @@ Never paste keys marked **SECRET** into the repo, a chat, or a screenshot.
 | 6. Resend (email to you) | Request emails in your mailbox | Later (requests feature) |
 | 7. Calendar admin | Making your Google account the tutor | **Yes** (calendar), after Parts 3–4 |
 
-Site URL used throughout: `https://bjornpijpops.github.io/tutoring/`
+Site URL used throughout: `https://<GITHUB_USERNAME>.github.io/tutoring/`
 
 ---
 
@@ -34,7 +34,7 @@ Site URL used throughout: `https://bjornpijpops.github.io/tutoring/`
 6. Allow the site to receive logins: **Authentication → URL Configuration**:
    - **Site URL**: `https://bjornpijpops.github.io/tutoring/`
    - **Redirect URLs**, add both:
-     - `https://bjornpijpops.github.io/tutoring/**`
+     - `https://<GITHUB_USERNAME>.github.io/tutoring/**`
      - `http://localhost:5173/**`
 7. Note your **Project ref** (the `abcdxyz` part of the URL); it is needed in Parts 3–6.
 
@@ -112,7 +112,7 @@ The calendar migration (`supabase/migrations/20261124000000_calendar.sql`) is ap
    ```
 
 2. Supabase → **Authentication → Sign In / Providers**: keep **only Google** enabled. Turn off **Email** sign-ups and **Allow anonymous sign-ins** (Authentication → Sign In / Providers, or Settings). Otherwise someone could register with an email address and, if it matched, gain access.
-3. Check **Authentication → URL Configuration** lists `https://bjornpijpops.github.io/tutoring/**` and `http://localhost:5173/**` (Part 1, step 6) and that the GitHub variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` exist (Part 2). For local development put the same two values in `.env.local`.
+3. Check **Authentication → URL Configuration** lists `https://<GITHUB_USERNAME>.github.io/tutoring/**` and `http://localhost:5173/**` (Part 1, step 6) and that the GitHub variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` exist (Part 2). For local development put the same two values in `.env.local`.
 4. Open the site, choose **Sign in → Continue with Google**, then **Calendar**. You should see the calendar manager; any other Google account sees "You don't have access yet".
 
 ---
@@ -124,3 +124,22 @@ The calendar migration (`supabase/migrations/20261124000000_calendar.sql`) is ap
 - [ ] Part 3 CLI installed and linked (yes / no, use SQL Editor)
 - [ ] Part 4 Google sign-in configured; Part 7 admin row inserted and email/anonymous sign-in disabled.
 - [ ] Parts 5–6: do these when we build Microsoft sign-in and requests.
+
+---
+
+## Part 8 - Access requests and e-mail to the tutor
+
+Needs Part 6 (Resend account, `RESEND_API_KEY`, `TUTOR_EMAIL`). The migration `20261125000000_access_requests.sql` is **already applied to production**; do not run `supabase db push` for it.
+
+1. Generate a webhook secret: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+2. `npx supabase secrets set WEBHOOK_SECRET=<that value>` (and, if not done in Part 6, `RESEND_API_KEY=<key>` and `TUTOR_EMAIL=<resend-account-email>`; they must be the Resend account's own address).
+3. Verify the CLI supports `--use-api` with `npx supabase functions deploy --help`, then deploy: `npx supabase functions deploy notify-access-request --use-api`.
+4. In Supabase, SQL Editor (same value, your project ref):
+
+   ```sql
+   select vault.create_secret('<WEBHOOK_SECRET>', 'access_webhook_secret');
+   select vault.create_secret('https://<PROJECT_REF>.supabase.co/functions/v1/notify-access-request', 'access_webhook_url');
+   ```
+
+5. If pg_net or pg_cron are not enabled: Database, Extensions, enable both.
+6. Smoke test with a second Google account: request access, the e-mail arrives, approve, the availability page shows, revoke, it is gone again. Mark the first mail **Not junk**.

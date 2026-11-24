@@ -38,7 +38,11 @@ describe('SupabaseAuthProvider', () => {
       onAuthStateChange: vi.fn(),
       ...overrides.auth,
     };
-    const rpc = vi.fn().mockResolvedValue(overrides.rpc ?? { data: true, error: null });
+    const rpc = vi
+      .fn()
+      .mockResolvedValue(
+        overrides.rpc ?? { data: [{ is_admin: true, status: null }], error: null },
+      );
     return {
       auth,
       rpc,
@@ -49,15 +53,20 @@ describe('SupabaseAuthProvider', () => {
   it('maps the admin check to the tutor role without exposing the e-mail', async () => {
     const { adapter, rpc } = provider({});
     const result = await adapter.getSession();
-    expect(rpc).toHaveBeenCalledWith('is_admin');
-    expect(result).toEqual({ ok: true, value: { user: { id: 'u1', role: 'tutor' } } });
+    expect(rpc).toHaveBeenCalledWith('get_my_access');
+    expect(result).toEqual({
+      ok: true,
+      value: { user: { id: 'u1', role: 'tutor', accessState: 'none' } },
+    });
   });
 
   it('maps a non-admin to tutee', async () => {
-    const { adapter } = provider({ rpc: { data: false, error: null } });
+    const { adapter } = provider({
+      rpc: { data: [{ is_admin: false, status: 'approved' }], error: null },
+    });
     expect(await adapter.getSession()).toEqual({
       ok: true,
-      value: { user: { id: 'u1', role: 'tutee' } },
+      value: { user: { id: 'u1', role: 'tutee', accessState: 'approved' } },
     });
   });
 
@@ -65,6 +74,24 @@ describe('SupabaseAuthProvider', () => {
     const { adapter } = provider({ rpc: { data: null, error: { message: 'boom' } } });
     const result = await adapter.getSession();
     expect(result.ok).toBe(false);
+  });
+
+  it('treats a malformed access answer as unavailable', async () => {
+    const { adapter } = provider({ rpc: { data: [{ is_admin: 'yes' }], error: null } });
+    expect((await adapter.getSession()).ok).toBe(false);
+  });
+
+  it('exposes the Google identity for display only', async () => {
+    const withMeta = {
+      user: { id: 'u1', email: 'x@example.test', user_metadata: { full_name: ' Alex ' } },
+    };
+    const { adapter } = provider({
+      auth: { getSession: vi.fn().mockResolvedValue({ data: { session: withMeta }, error: null }) },
+    });
+    expect(await adapter.getIdentity()).toEqual({
+      ok: true,
+      value: { displayName: 'Alex', email: 'x@example.test' },
+    });
   });
 
   it('returns null without a session and does not call the rpc', async () => {
@@ -119,7 +146,9 @@ describe('SupabaseAuthProvider', () => {
     const stop = adapter.onSessionChange(listener);
     handler('SIGNED_IN', session);
     await vi.runAllTimersAsync();
-    expect(listener).toHaveBeenCalledWith({ user: { id: 'u1', role: 'tutor' } });
+    expect(listener).toHaveBeenCalledWith({
+      user: { id: 'u1', role: 'tutor', accessState: 'none' },
+    });
     stop();
     expect(unsubscribe).toHaveBeenCalled();
     vi.useRealTimers();

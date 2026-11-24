@@ -17,7 +17,7 @@ const infrastructureAndSupabase = [
 ];
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'node_modules'] },
+  { ignores: ['dist', 'coverage', 'node_modules', 'supabase/functions/**/index.ts'] },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   jsxA11y.flatConfigs.recommended,

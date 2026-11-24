@@ -2,11 +2,13 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
-import { renderWithServices } from '../test/render-with-services';
+import { createAccessServices } from '../test/in-memory-access';
+import { InMemoryAuthProvider } from '../test/in-memory-auth';
+import { createTestServices, renderWithServices } from '../test/render-with-services';
 import { Layout } from './layout';
 
-function renderLayout(route = '/') {
-  return renderWithServices(
+function LayoutRoutes() {
+  return (
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<h1>Home page</h1>} />
@@ -14,9 +16,12 @@ function renderLayout(route = '/') {
         <Route path="login" element={<h1>Login page</h1>} />
         <Route path="*" element={<h1>Missing</h1>} />
       </Route>
-    </Routes>,
-    { route },
+    </Routes>
   );
+}
+
+function renderLayout(route = '/') {
+  return renderWithServices(<LayoutRoutes />, { route });
 }
 
 describe('Layout', () => {
@@ -42,14 +47,37 @@ describe('Layout', () => {
     expect(window.location.hash).toBe('');
   });
 
-  it('lists the navigation links and marks the current page', () => {
-    renderLayout('/calendar');
+  it('lists only Home while signed out and marks the current page', () => {
+    renderLayout('/');
     const nav = screen.getByRole('navigation', { name: 'Main' });
-    expect(nav.querySelectorAll('a')).toHaveLength(2);
-    expect(screen.getByRole('link', { name: 'Calendar' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current');
+    expect(nav.querySelectorAll('a')).toHaveLength(1);
+    expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
   });
 
+  it('gives the tutor the calendar and access requests with the pending count in the name', async () => {
+    const { services, repo } = createAccessServices({
+      user: { id: 't', role: 'tutor', accessState: 'none' },
+    });
+    await repo.as({ id: 'u-9', role: 'tutee' }).requestAccess('');
+    renderWithServices(<LayoutRoutes />, { route: '/calendar', services });
+    const link = await screen.findByRole('link', { name: /^Access requests\s*,\s*1 pending/ });
+    expect(link).toHaveAttribute('href', '/access-requests');
+    expect(screen.getByRole('link', { name: 'Calendar' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('gives an approved tutee Availability and no tutor links', async () => {
+    renderWithServices(<LayoutRoutes />, {
+      services: {
+        ...createTestServices(),
+        auth: new InMemoryAuthProvider({
+          user: { id: 'u', role: 'tutee', accessState: 'approved' },
+        }),
+      },
+    });
+    expect(await screen.findByRole('link', { name: 'Availability' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Calendar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Access requests/ })).not.toBeInTheDocument();
+  });
   it('sets the document title on load without stealing focus', () => {
     renderLayout('/calendar');
     expect(document.title).toBe('Calendar · Tutoring');
