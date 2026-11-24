@@ -1,21 +1,31 @@
-import type { IsoDateTime } from './user';
+import type { Interval, IsoDateTime } from './interval';
 
-/** Lifecycle of a tutee's request for a slot. */
-export type SessionRequestStatus = 'pending' | 'accepted' | 'declined';
+export type SessionRequestStatus = 'pending' | 'accepted' | 'declined' | 'cancelled';
 
-/** A tutee's request to book an availability slot. */
-export interface SessionRequest {
+export interface SessionRequest extends Interval {
   readonly id: string;
-  readonly slotId: string;
+  readonly slotId?: string;
   readonly userId: string;
   readonly status: SessionRequestStatus;
   readonly createdAt: IsoDateTime;
+  readonly updatedAt?: IsoDateTime;
+  readonly decidedAt?: IsoDateTime;
+  readonly cancelledAt?: IsoDateTime;
 }
 
-/** The tutor's decision on a session request. */
-export type SessionDecision = Exclude<SessionRequestStatus, 'pending'>;
+/** Tutor-only identity projection used by the decision page. */
+export interface TutorSessionRequest extends SessionRequest {
+  readonly requesterName: string;
+  readonly requesterEmail: string;
+}
 
-/** Event the tutor is notified about (tutor-only, see ADR 0001). */
+export interface SessionDecisionResult {
+  readonly request: SessionRequest;
+  readonly overlapDeclinedCount: number;
+}
+
+export type SessionDecision = 'accepted' | 'declined';
+
 export type TutorNotification =
   | { readonly type: 'access-requested'; readonly requestId: string }
   | { readonly type: 'session-requested'; readonly requestId: string };

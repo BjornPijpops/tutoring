@@ -82,7 +82,15 @@ export function cellIndexFromPointer(
   return Math.max(0, Math.min(cells - 1, index));
 }
 
-/** One-hour default for a touch tap, clamped so it never passes closing time. */
-export function touchSelectionFromCell(date: IsoDate, index: number): LocalTimeRange {
-  return selectionFromCells(date, index, Math.min(index + 1, CELLS_PER_DAY - 1));
+/**
+ * One-hour default for a touch tap, clamped so it never passes closing time. Pass
+ * `extend: false` when the next cell is not free, so a tap on a free cell next to a blocked
+ * one still selects a valid half hour.
+ */
+export function touchSelectionFromCell(
+  date: IsoDate,
+  index: number,
+  extend = true,
+): LocalTimeRange {
+  return selectionFromCells(date, index, extend ? Math.min(index + 1, CELLS_PER_DAY - 1) : index);
 }

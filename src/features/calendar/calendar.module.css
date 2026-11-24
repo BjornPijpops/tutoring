@@ -404,6 +404,12 @@
     var(--color-surface-alt);
   border-left-width: 4px;
 }
+
+/* Sessions: solid (never striped) with a thick left edge as a non-colour cue. */
+.sessionBlock {
+  border-left: 6px solid var(--color-text);
+  font-weight: 600;
+}
 @media (prefers-contrast: more) {
   .anonymousBlocked {
     border: 2px solid var(--color-text);

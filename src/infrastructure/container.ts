@@ -24,6 +24,7 @@ import {
   SupabaseAuthProvider,
   SupabaseBlockedTimeRepository,
   SupabaseCalendarEventRepository,
+  SupabaseSessionRequestRepository,
   createSupabaseClient,
   supabaseSettings,
 } from './supabase';
@@ -73,7 +74,9 @@ export function createContainer(
       ? new SupabaseBlockedTimeRepository(client)
       : new InMemoryBlockedTimeRepository(memoryCalendarEvents),
     icsParser: new IcalJsParser(),
-    sessionRequests: new InMemorySessionRequestRepository({ availability }),
+    sessionRequests: client
+      ? new SupabaseSessionRequestRepository(client)
+      : new InMemorySessionRequestRepository({ availability }),
     notifier: new InMemoryNotifier(),
   };
 }

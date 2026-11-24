@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 import { useServices } from '../../app/services-context';
 import type { CalendarEvent } from '../../core/domain/calendar-event';
+import type { TutorSessionRequest } from '../../core/domain/session-request';
 import { mergeIntervals } from '../../core/domain/blocked-intervals';
 import { addDays, startOfWeek, type IsoDate } from '../../core/domain/local-time';
 import type { PortResult } from '../../core/ports';
@@ -12,7 +13,7 @@ import { CalendarEventDialog } from './calendar-event-dialog';
 import { EventList } from './event-list';
 import { ImportPanel } from './import-panel';
 import { SelectableTimeGrid } from './selectable-time-grid';
-import { toGridBlock } from './tutor-grid-blocks';
+import { toGridBlock, toSessionBlock } from './tutor-grid-blocks';
 import { WeekNavigator } from './week-navigator';
 import { WeekView, type WeekLoadState } from './week-view';
 import styles from './calendar.module.css';
@@ -21,6 +22,7 @@ interface Loaded {
   readonly key: string;
   readonly weekStart: IsoDate;
   readonly outcome: Awaited<PortResult<readonly CalendarEvent[]>>;
+  readonly sessions: readonly TutorSessionRequest[];
 }
 interface PendingDelete {
   readonly event: CalendarEvent;
@@ -37,7 +39,7 @@ interface DialogState {
 
 /** Tutor calendar orchestration: loading, intent handling, dialog and persistence. */
 export function CalendarManager() {
-  const { calendarEvents } = useServices();
+  const { calendarEvents, sessionRequests } = useServices();
   const { signOut } = useAuth();
   const currentWeekStart = startOfWeek(todayInBrussels());
   const [weekStart, setWeekStart] = useState<IsoDate>(currentWeekStart);
@@ -51,15 +53,24 @@ export function CalendarManager() {
   const key = `${weekStart}#${String(reload)}`;
   useEffect(() => {
     let active = true;
-    void calendarEvents.listEvents(weekRange(weekStart)).then((outcome) => {
-      if (active) setLoaded({ key, weekStart, outcome });
+    const range = weekRange(weekStart);
+    void Promise.all([
+      calendarEvents.listEvents(range),
+      // Sessions are an overlay: if they cannot load, the calendar itself still works.
+      sessionRequests.listAccepted({ startsAt: range.from, endsAt: range.to }),
+    ]).then(([outcome, accepted]) => {
+      if (active)
+        setLoaded({ key, weekStart, outcome, sessions: accepted.ok ? accepted.value : [] });
     });
     return () => {
       active = false;
     };
-  }, [calendarEvents, weekStart, key]);
+  }, [calendarEvents, sessionRequests, weekStart, key]);
   const events = useMemo(() => (loaded?.outcome.ok ? loaded.outcome.value : []), [loaded]);
-  const blocks = useMemo(() => events.map(toGridBlock), [events]);
+  const blocks = useMemo(
+    () => [...events.map(toGridBlock), ...(loaded?.sessions ?? []).map(toSessionBlock)],
+    [events, loaded],
+  );
   const days = useMemo(
     () =>
       loaded?.outcome.ok
@@ -156,7 +167,7 @@ export function CalendarManager() {
             currentWeekStart={currentWeekStart}
             onChange={setWeekStart}
           />
-          {events.length === 0 ? (
+          {events.length === 0 && blocks.length === 0 ? (
             <p className={styles['note']}>Nothing is blocked this week.</p>
           ) : null}
           <p className={styles['note']}>

@@ -98,7 +98,15 @@ export function DayTimeList({
                   aria-label={cellName(day, cell)}
                   aria-disabled={readOnly ? true : undefined}
                   onClick={() => {
-                    if (!readOnly) onSelect(touchSelectionFromCell(day.date, index));
+                    if (!readOnly)
+                      onSelect(
+                        touchSelectionFromCell(
+                          day.date,
+                          index,
+                          index + 1 >= day.openCells.length ||
+                            day.openCells[index + 1]?.state === 'free',
+                        ),
+                      );
                   }}
                 >
                   {cell.label} {cell.state === 'partial' ? 'Partly blocked' : ''}

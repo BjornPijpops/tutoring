@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router';
-import { usePendingCount } from '../features/access/pending-count';
+import { usePendingCount, useSessionPendingCount } from '../features/access/pending-count';
 import { useAuth } from '../features/auth/auth-provider';
 import { AuthControls, SignOutAlert } from '../features/auth/auth-controls';
 import { StatusBadge } from '../shared/ui';
@@ -14,7 +14,8 @@ export function Layout() {
   const { state } = useAuth();
   const user = state.status === 'signed-in' ? state.session.user : null;
   const pendingCount = usePendingCount(user?.role === 'tutor');
-  const navItems = getNavItems(user, pendingCount);
+  const sessionPendingCount = useSessionPendingCount(user?.role === 'tutor');
+  const navItems = getNavItems(user, pendingCount, sessionPendingCount);
   return (
     <div className={styles['page']}>
       <RouteFocus />

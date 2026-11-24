@@ -23,7 +23,7 @@ interface VisualSelection {
   readonly first: number;
   readonly last: number;
 }
-const DEFAULT_HINT = 'Click or drag in the grid to create blocked time.';
+const DEFAULT_HINT = 'Select a time range.';
 function cellOf(target: EventTarget): { day: number; index: number } | null {
   const element = target instanceof Element ? target.closest<HTMLElement>('[data-cell]') : null;
   return element
@@ -125,7 +125,11 @@ export function WeekTimeGrid({
     if (readOnly || !model || !cell || !isSelectable(cell)) return;
     onSelect(
       lastPointerType.current === 'touch'
-        ? touchSelectionFromCell(model.date, index)
+        ? touchSelectionFromCell(
+            model.date,
+            index,
+            index + 1 >= model.openCells.length || model.openCells[index + 1]?.state === 'free',
+          )
         : selectionFromCells(model.date, index),
     );
     lastPointerType.current = 'mouse';

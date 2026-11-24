@@ -1,7 +1,9 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
+import { announceRequestsChanged } from '../features/access/pending-count';
+import { InMemorySessionRequestRepository } from '../infrastructure/memory';
 import { createAccessServices } from '../test/in-memory-access';
 import { InMemoryAuthProvider } from '../test/in-memory-auth';
 import { createTestServices, renderWithServices } from '../test/render-with-services';
@@ -63,6 +65,47 @@ describe('Layout', () => {
     const link = await screen.findByRole('link', { name: /^Access requests\s*,\s*1 pending/ });
     expect(link).toHaveAttribute('href', '/access-requests');
     expect(screen.getByRole('link', { name: 'Calendar' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('shows the pending session requests on Requests and refreshes after a decision', async () => {
+    const day = '2099-06-02';
+    const request = (id: string) => ({
+      id,
+      userId: 'u',
+      status: 'pending' as const,
+      createdAt: `${day}T00:00:00Z`,
+      startsAt: `${day}T10:00:00Z`,
+      endsAt: `${day}T11:00:00Z`,
+    });
+    const sessionRequests = new InMemorySessionRequestRepository({
+      seed: [
+        request('a'),
+        { ...request('b'), startsAt: `${day}T12:00:00Z`, endsAt: `${day}T13:00:00Z` },
+      ],
+    });
+    const { services } = createAccessServices({
+      user: { id: 't', role: 'tutor', accessState: 'none' },
+    });
+    renderWithServices(<LayoutRoutes />, {
+      route: '/calendar',
+      services: { ...services, sessionRequests },
+    });
+    const link = await screen.findByRole('link', { name: /^Requests\s*,\s*2 pending/ });
+    expect(link).toHaveAttribute('href', '/session-requests');
+    expect(screen.getByRole('link', { name: 'Access requests' })).toBeInTheDocument();
+    await sessionRequests.decide('a', 'declined');
+    act(() => {
+      announceRequestsChanged();
+    });
+    expect(await screen.findByRole('link', { name: /^Requests\s*,\s*1 pending/ })).toBeVisible();
+  });
+
+  it('shows no badge on Requests when nothing is pending', async () => {
+    const { services } = createAccessServices({
+      user: { id: 't', role: 'tutor', accessState: 'none' },
+    });
+    renderWithServices(<LayoutRoutes />, { route: '/calendar', services });
+    expect(await screen.findByRole('link', { name: 'Requests' })).toBeInTheDocument();
   });
 
   it('gives an approved tutee Availability and no tutor links', async () => {

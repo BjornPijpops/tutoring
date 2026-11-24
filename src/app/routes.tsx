@@ -1,6 +1,8 @@
 import { Route, Routes } from 'react-router';
 import { AccessPage } from '../features/access/access-page';
 import { AccessRequestsPage } from '../features/access/access-requests-page';
+import { MySessionsPage } from '../features/access/my-sessions-page';
+import { SessionRequestsPage } from '../features/access/session-requests-page';
 import { RequireAccess } from '../features/access/require-access';
 import { LoginPage } from '../features/auth/login-page';
 import { RequireAuth } from '../features/auth/require-auth';
@@ -36,6 +38,26 @@ export function AppRoutes() {
             <RequireAuth heading="Request access" signInText="Sign in to ask the tutor for access.">
               <AccessPage />
             </RequireAuth>
+          }
+        />
+        <Route
+          path="my-sessions"
+          element={
+            <RequireAccess heading="My sessions">
+              <MySessionsPage />
+            </RequireAccess>
+          }
+        />
+        <Route
+          path="session-requests"
+          element={
+            <RequireRole
+              requiredRole="tutor"
+              heading="Session requests"
+              noAccessText="Session requests are only available to the tutor."
+            >
+              <SessionRequestsPage />
+            </RequireRole>
           }
         />
         <Route

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useServices } from '../../app/services-context';
 
 const CHANGED_EVENT = 'access-requests-changed';
@@ -15,14 +15,39 @@ export function announceRequestsChanged(): void {
  */
 export function usePendingCount(enabled: boolean): number {
   const { accessRequests } = useServices();
+  return usePendingLoader(
+    enabled,
+    useCallback(
+      () =>
+        accessRequests
+          .listRequests('pending')
+          .then((result) => (result.ok ? result.value.length : 0)),
+      [accessRequests],
+    ),
+  );
+}
+
+/** Number of pending session requests waiting for the tutor; same refresh rules as above. */
+export function useSessionPendingCount(enabled: boolean): number {
+  const { sessionRequests } = useServices();
+  return usePendingLoader(
+    enabled,
+    useCallback(
+      () => sessionRequests.listPending().then((result) => (result.ok ? result.value.length : 0)),
+      [sessionRequests],
+    ),
+  );
+}
+
+function usePendingLoader(enabled: boolean, fetchCount: () => Promise<number>): number {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
     if (!enabled) return;
     let active = true;
     const load = () => {
-      void accessRequests.listRequests('pending').then((result) => {
-        if (active) setCount(result.ok ? result.value.length : 0);
+      void fetchCount().then((value) => {
+        if (active) setCount(value);
       });
     };
     load();
@@ -33,7 +58,7 @@ export function usePendingCount(enabled: boolean): number {
       window.removeEventListener('focus', load);
       window.removeEventListener(CHANGED_EVENT, load);
     };
-  }, [accessRequests, enabled]);
+  }, [fetchCount, enabled]);
 
   return enabled ? count : 0;
 }

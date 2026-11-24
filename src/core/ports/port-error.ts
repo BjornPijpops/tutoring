@@ -1,7 +1,12 @@
 import type { Result } from '../domain/result';
 
 /** Stable reason for a `conflict` the user can act on. */
-export type ConflictCode = 'access_requests_closed' | 'cooldown_active' | 'state_conflict';
+export type ConflictCode =
+  | 'access_requests_closed'
+  | 'cooldown_active'
+  | 'state_conflict'
+  | 'schedule_unavailable'
+  | 'pending_limit';
 
 /** Why a port call failed; adapters map backend errors onto these kinds. */
 export interface PortError {

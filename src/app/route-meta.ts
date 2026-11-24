@@ -11,10 +11,12 @@ export const ROUTE_TITLES: Readonly<Record<string, string>> = {
   '/calendar': 'Calendar',
   '/access': 'Request access',
   '/access-requests': 'Access requests',
+  '/my-sessions': 'My sessions',
+  '/session-requests': 'Session requests',
   '/availability': 'Availability',
 };
 
 /** Document title for a pathname, e.g. `Calendar · Tutoring`. */
 export function documentTitle(pathname: string): string {
-  return `${ROUTE_TITLES[pathname] ?? NOT_FOUND_TITLE} · ${APP_NAME}`;
+  return `${ROUTE_TITLES[pathname] ?? NOT_FOUND_TITLE} \u00b7 ${APP_NAME}`;
 }

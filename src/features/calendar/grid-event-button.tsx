@@ -24,7 +24,7 @@ export function GridEventButton({
   return (
     <button
       type="button"
-      className={`${className} ${block.kind === 'blocked' && block.readOnly ? styles['anonymousBlocked'] : ''}`}
+      className={`${className} ${block.kind === 'blocked' && block.readOnly ? styles['anonymousBlocked'] : ''} ${block.kind === 'busy' ? styles['sessionBlock'] : ''}`}
       {...(style ? { style } : {})}
       aria-label={`${block.label}, ${blockDetail(block, clusterSize)}`}
       aria-disabled={block.readOnly ? true : undefined}
