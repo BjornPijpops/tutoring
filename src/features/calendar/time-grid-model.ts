@@ -17,8 +17,10 @@ export interface GridBlock extends Interval {
   /** Text shown and announced; the container decides how much to reveal. */
   readonly label: string;
   readonly kind: GridBlockKind;
-  /** When true the grid offers no mutation shortcut (Delete) for the block. */
+  /** When true the grid does not activate the block. */
   readonly readOnly: boolean;
+  /** True when the block belongs to a repeating series. */
+  readonly repeats?: boolean;
 }
 
 /** A local-day selection before it is converted to persistence. */

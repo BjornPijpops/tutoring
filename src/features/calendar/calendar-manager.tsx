@@ -4,13 +4,15 @@ import type { CalendarEvent } from '../../core/domain/calendar-event';
 import type { TutorSessionRequest } from '../../core/domain/session-request';
 import { mergeIntervals } from '../../core/domain/blocked-intervals';
 import { addDays, startOfWeek, type IsoDate } from '../../core/domain/local-time';
-import type { PortResult } from '../../core/ports';
+import type { EventChanges } from '../../core/domain/event-changes';
+import type { RecurrenceScope } from '../../core/domain/recurrence';
+import type { NewCalendarSeries, PortResult } from '../../core/ports';
 import { formatEventWhen, todayInBrussels } from '../../shared/dates/brussels';
 import { ConfirmDialog } from '../../shared/ui';
 import { useAuth } from '../auth/auth-provider';
 import { buildWeekModel, weekRange } from './calendar-view-model';
 import { CalendarEventDialog } from './calendar-event-dialog';
-import { EventList } from './event-list';
+import { useSeriesDetails } from './use-series-details';
 import { ImportPanel } from './import-panel';
 import { SelectableTimeGrid } from './selectable-time-grid';
 import { toGridBlock, toSessionBlock } from './tutor-grid-blocks';
@@ -29,7 +31,12 @@ interface PendingDelete {
   readonly busy: boolean;
   readonly error?: string;
 }
+const GONE_MESSAGE = 'This event no longer exists. It may have been deleted already.';
+const countMessage = (count: number, verb: string) =>
+  count === 1 ? `Event ${verb}.` : `${String(count)} events ${verb}.`;
+
 interface DialogState {
+  readonly gone?: boolean;
   readonly mode: 'create' | 'edit' | 'imported';
   readonly event?: CalendarEvent;
   readonly initial?: { date: IsoDate; start: number; end: number };
@@ -48,8 +55,16 @@ export function CalendarManager() {
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [announce, setAnnounce] = useState('');
-  const eventsHeading = useRef<HTMLHeadingElement>(null);
+  const weekHeading = useRef<HTMLHeadingElement>(null);
+  const [focusHeading, setFocusHeading] = useState(0);
   const saving = useRef(false);
+  const dialogEvent = dialog?.mode === 'edit' ? dialog.event : undefined;
+  const getSeries = useCallback((id: string) => calendarEvents.getSeries(id), [calendarEvents]);
+  const dialogSeries = useSeriesDetails(dialogEvent?.seriesId, getSeries);
+  // Runs after the dialog has unmounted, so it wins over the dialog's focus return.
+  useEffect(() => {
+    if (focusHeading > 0) weekHeading.current?.focus();
+  }, [focusHeading]);
   const key = `${weekStart}#${String(reload)}`;
   useEffect(() => {
     let active = true;
@@ -111,27 +126,93 @@ export function CalendarManager() {
         });
     });
   };
-  const update = (event: CalendarEvent) => {
+  const createSeries = (series: NewCalendarSeries) => {
     if (!dialog || saving.current) return;
     const activeDialog = dialog;
     saving.current = true;
-    const expected = event.updatedAt ?? '';
+    const result = calendarEvents.addSeries(series);
     setDialog({ ...activeDialog, busy: true });
-    void calendarEvents.updateEvent(event, expected).then((outcome) => {
+    void result.then((outcome) => {
       saving.current = false;
       if (outcome.ok) {
         setDialog(null);
-        setAnnounce('Event updated.');
+        setAnnounce(countMessage(outcome.value.occurrenceCount, 'created'));
         refresh();
       } else
         setDialog({
           ...activeDialog,
           busy: false,
-          error:
-            outcome.error.kind === 'conflict'
-              ? 'This time changed. Review the times and try again.'
-              : "We couldn't save this event. Check your connection and try again.",
+          error: "We couldn't save these events. Check your connection and try again.",
         });
+    });
+  };
+  const failureDialog = (
+    activeDialog: DialogState,
+    error: { readonly kind: string },
+    action: 'save' | 'delete',
+    plural: boolean,
+  ): DialogState => {
+    const what = plural ? 'these events' : 'this event';
+    if (error.kind === 'not-found') {
+      refresh();
+      return { ...activeDialog, busy: false, gone: true, error: GONE_MESSAGE };
+    }
+    return {
+      ...activeDialog,
+      busy: false,
+      error:
+        error.kind === 'conflict'
+          ? 'This event changed. Review the details and try again.'
+          : `We couldn't ${action} ${what}. Check your connection and try again.`,
+    };
+  };
+  const update = (event: CalendarEvent, scope?: RecurrenceScope, changes?: EventChanges) => {
+    if (!dialog || saving.current) return;
+    const activeDialog = dialog;
+    saving.current = true;
+    const expected = event.updatedAt ?? '';
+    setDialog({ ...activeDialog, busy: true });
+    void calendarEvents.updateEvent(event, expected, scope, changes).then(async (outcome) => {
+      if (outcome.ok) {
+        saving.current = false;
+        setDialog(null);
+        setAnnounce(countMessage(outcome.value.affectedCount, 'updated'));
+        refresh();
+        return;
+      }
+      if (outcome.error.kind === 'conflict') {
+        const fresh = await calendarEvents.listEvents(weekRange(weekStart));
+        const latest = fresh.ok ? fresh.value.find((item) => item.id === event.id) : undefined;
+        saving.current = false;
+        setDialog(
+          failureDialog(
+            latest ? { ...activeDialog, event: latest } : activeDialog,
+            outcome.error,
+            'save',
+            scope !== undefined && scope !== 'this',
+          ),
+        );
+        return;
+      }
+      saving.current = false;
+      setDialog(
+        failureDialog(activeDialog, outcome.error, 'save', scope !== undefined && scope !== 'this'),
+      );
+    });
+  };
+  const deleteScoped = (scope: RecurrenceScope) => {
+    if (!dialog?.event || saving.current) return;
+    const activeDialog = dialog;
+    saving.current = true;
+    setDialog({ ...activeDialog, busy: true });
+    void calendarEvents.removeEvent(activeDialog.event?.id ?? '', scope).then((outcome) => {
+      saving.current = false;
+      if (outcome.ok) {
+        setDialog(null);
+        setAnnounce(countMessage(outcome.value.affectedCount, 'deleted'));
+        refresh();
+        setFocusHeading((value) => value + 1);
+      } else setDialog(failureDialog(activeDialog, outcome.error, 'delete', scope !== 'this'));
     });
   };
   const confirmDelete = async () => {
@@ -144,14 +225,14 @@ export function CalendarManager() {
       setPendingDelete({
         ...pendingDelete,
         busy: false,
-        error: "We couldn't delete the event. Try again.",
+        error: "We couldn't delete this event. Check your connection and try again.",
       });
       return;
     }
     setPendingDelete(null);
     setAnnounce('Event deleted.');
     refresh();
-    eventsHeading.current?.focus();
+    setFocusHeading((value) => value + 1);
   };
   return (
     <div className={styles['page']}>
@@ -161,7 +242,9 @@ export function CalendarManager() {
       </p>
       {state === 'ready' && days ? (
         <section aria-labelledby="week-view-heading" className={styles['section']}>
-          <h2 id="week-view-heading">Week view</h2>
+          <h2 id="week-view-heading" ref={weekHeading} tabIndex={-1}>
+            Week view
+          </h2>
           <WeekNavigator
             weekStart={weekStart}
             currentWeekStart={currentWeekStart}
@@ -190,10 +273,6 @@ export function CalendarManager() {
               if (!event) return;
               setDialog({ mode: event.source === 'ics' ? 'imported' : 'edit', event, busy: false });
             }}
-            onDeleteBlock={(blockKey) => {
-              const event = events.find((candidate) => candidate.id === blockKey);
-              if (event) setPendingDelete({ event, busy: false });
-            }}
             onShiftWeek={(delta) => {
               setWeekStart(addDays(weekStart, delta * 7));
             }}
@@ -213,19 +292,6 @@ export function CalendarManager() {
           onSignOut={() => void signOut()}
         />
       )}
-      <section aria-labelledby="events-heading" className={styles['section']}>
-        <h2 id="events-heading" ref={eventsHeading} tabIndex={-1}>
-          Events this week
-        </h2>
-        {state === 'ready' ? (
-          <EventList
-            events={events}
-            onDelete={(event) => {
-              setPendingDelete({ event, busy: false });
-            }}
-          />
-        ) : null}
-      </section>
       <div className={styles['forms']}>
         <ImportPanel
           onChanged={() => {
@@ -255,10 +321,14 @@ export function CalendarManager() {
       {dialog ? (
         <CalendarEventDialog
           {...dialog}
+          {...(dialogSeries.series ? { series: dialogSeries.series } : {})}
+          onRetrySeries={dialogSeries.retry}
           onClose={() => {
             setDialog(null);
           }}
           onCreate={create}
+          onCreateSeries={createSeries}
+          onDeleteScoped={deleteScoped}
           onSave={update}
           onDelete={() => {
             if (dialog.event) setPendingDelete({ event: dialog.event, busy: false });

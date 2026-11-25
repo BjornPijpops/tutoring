@@ -39,7 +39,6 @@ export function WeekTimeGrid({
   labelId,
   onSelect,
   onActivateBlock,
-  onDeleteBlock,
   readOnly = false,
 }: TimeGridViewProps) {
   const gridRef = useRef<HTMLDivElement>(null);
@@ -234,7 +233,6 @@ export function WeekTimeGrid({
                   width: `${String(100 / item.lanes)}%`,
                 }}
                 onActivate={onActivateBlock}
-                onDelete={onDeleteBlock}
               />
             )),
           )}

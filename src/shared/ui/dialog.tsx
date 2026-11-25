@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode, type Ref } from 'react';
 import styles from './dialog.module.css';
 
 /** Props of {@link Dialog}. */
@@ -7,6 +7,8 @@ export interface DialogProps {
   title: string;
   /** Called when the user dismisses the dialog (Esc); the parent decides whether to close. */
   onClose: () => void;
+  /** Gives the parent the title element, e.g. to move focus to it when the content changes. */
+  titleRef?: Ref<HTMLHeadingElement>;
   children: ReactNode;
 }
 
@@ -14,7 +16,7 @@ export interface DialogProps {
  * Modal dialog on the native `<dialog>` element: focus trap, Esc and inert background come
  * from the browser. Focus returns to the element that opened it when that still exists.
  */
-export function Dialog({ open, title, onClose, children }: DialogProps) {
+export function Dialog({ open, title, onClose, titleRef, children }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const opener = useRef<Element | null>(null);
   const isOpen = useRef(open);
@@ -59,7 +61,12 @@ export function Dialog({ open, title, onClose, children }: DialogProps) {
     >
       {open ? (
         <>
-          <h2 id={titleId} className={styles['title']}>
+          <h2
+            id={titleId}
+            ref={titleRef}
+            tabIndex={titleRef ? -1 : undefined}
+            className={styles['title']}
+          >
             {title}
           </h2>
           {children}

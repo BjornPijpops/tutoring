@@ -47,7 +47,8 @@ describe('CalendarPage', () => {
     });
     expect(screen.getByRole('heading', { level: 1, name: 'Calendar' })).toBeInTheDocument();
     expect((await screen.findAllByText(SECRET_TITLE)).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /^Delete Dentist appointment/ })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Events this week' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Delete Dentist/ })).not.toBeInTheDocument();
   });
 
   it('creates a blocked time from an empty grid cell after confirmation', async () => {
@@ -57,7 +58,7 @@ describe('CalendarPage', () => {
     expect(await screen.findByRole('dialog', { name: 'Create blocked time' })).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText(/^Title/), 'Piano');
     await userEvent.click(screen.getByRole('button', { name: 'Create event' }));
-    expect(await screen.findByRole('button', { name: /Delete Piano/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /^Piano/ })).toBeInTheDocument();
   });
 
   it('shows validation errors for an empty create dialog', async () => {
@@ -70,37 +71,53 @@ describe('CalendarPage', () => {
     expect(await screen.findByRole('alert')).toBeInTheDocument();
   });
 
-  it('deletes an event after confirmation', async () => {
+  async function startDelete() {
+    await userEvent.click(await screen.findByRole('button', { name: /^Dentist appointment/ }));
+    const editDialog = await screen.findByRole('dialog', { name: 'Edit blocked time' });
+    await userEvent.click(within(editDialog).getByRole('button', { name: 'Delete event' }));
+    return screen.findByRole('dialog', { name: 'Delete this event?' });
+  }
+
+  it('deletes an event by opening it and confirming', async () => {
     renderWithServices(<CalendarPage />, {
       services: servicesFor([eventToday('e1', SECRET_TITLE)]),
     });
-    await userEvent.click(
-      await screen.findByRole('button', { name: /^Delete Dentist appointment/ }),
-    );
-    const dialog = await screen.findByRole('dialog', { name: 'Delete this event?' });
+    const dialog = await startDelete();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete event' }));
-    expect(await screen.findByText('No blocked events this week.')).toBeInTheDocument();
+    expect(await screen.findByText('Nothing is blocked this week.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Week view' })).toHaveFocus();
+  });
+
+  it('shows the documented copy when deleting an event fails', async () => {
+    const services = servicesFor([eventToday('e1', SECRET_TITLE)]);
+    services.calendarEvents.removeEvent = () =>
+      Promise.resolve({ ok: false, error: { kind: 'unavailable', message: 'offline' } });
+    renderWithServices(<CalendarPage />, { services });
+    const dialog = await startDelete();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete event' }));
+    expect(
+      await within(dialog).findByText(
+        "We couldn't delete this event. Check your connection and try again.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it('keeps the event when deletion is cancelled', async () => {
     renderWithServices(<CalendarPage />, {
       services: servicesFor([eventToday('e1', SECRET_TITLE)]),
     });
-    await userEvent.click(
-      await screen.findByRole('button', { name: /^Delete Dentist appointment/ }),
-    );
-    const dialog = await screen.findByRole('dialog', { name: 'Delete this event?' });
+    const dialog = await startDelete();
     await userEvent.click(within(dialog).getByRole('button', { name: 'Keep event' }));
-    expect(screen.getByRole('button', { name: /^Delete Dentist appointment/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Dentist appointment/ })).toBeInTheDocument();
   });
 
   it('navigates to the next week and back', async () => {
     renderWithServices(<CalendarPage />, { services: servicesFor([]) });
-    await screen.findByText('No blocked events this week.');
+    await screen.findByText('Nothing is blocked this week.');
     await userEvent.click(screen.getByRole('button', { name: /next week/i }));
-    expect(await screen.findByText('No blocked events this week.')).toBeInTheDocument();
+    expect(await screen.findByText('Nothing is blocked this week.')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Today' }));
-    expect(await screen.findByText('No blocked events this week.')).toBeInTheDocument();
+    expect(await screen.findByText('Nothing is blocked this week.')).toBeInTheDocument();
   });
 
   it('reports a load failure with a retry', async () => {
@@ -116,7 +133,7 @@ describe('CalendarPage', () => {
     expect(await screen.findByText(/couldn't load the calendar/)).toBeInTheDocument();
     fail = false;
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
-    expect(await screen.findByText('No blocked events this week.')).toBeInTheDocument();
+    expect(await screen.findByText('Nothing is blocked this week.')).toBeInTheDocument();
   });
 });
 

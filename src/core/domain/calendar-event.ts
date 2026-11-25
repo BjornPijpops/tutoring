@@ -12,6 +12,10 @@ export interface CalendarEvent extends Interval {
   readonly externalId?: string;
   /** Optimistic-concurrency version returned by persistence. */
   readonly updatedAt?: IsoDateTime;
+  /** Series identifier for a manually recurring event. */
+  readonly seriesId?: string;
+  /** Stable position within the series; survives moving one occurrence and splitting. */
+  readonly seriesIndex?: number;
 }
 
 /** Data needed to create an event; the repository assigns the id. */

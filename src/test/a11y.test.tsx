@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it } from 'vitest';
 import { AuthControls } from '../features/auth/auth-controls';
@@ -138,9 +138,9 @@ describe('accessibility (axe)', () => {
 
   it('calendar page with the delete dialog open', async () => {
     const { container } = renderWithServices(<CalendarPage />, { services: tutorServices() });
-    await userEvent.click(
-      await screen.findByRole('button', { name: /^Delete Dentist appointment/ }),
-    );
+    await userEvent.click(await screen.findByRole('button', { name: /^Dentist appointment/ }));
+    const editDialog = await screen.findByRole('dialog', { name: 'Edit blocked time' });
+    await userEvent.click(within(editDialog).getByRole('button', { name: 'Delete event' }));
     await screen.findByRole('dialog', { name: 'Delete this event?' });
     await expectNoViolations(container);
   });

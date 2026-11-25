@@ -194,33 +194,6 @@
   color: var(--color-text-muted);
 }
 
-.events {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.eventItem {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) 0;
-  border-bottom: var(--border-width) solid var(--color-border-subtle);
-}
-
-.eventTitle {
-  margin: 0;
-  font-weight: var(--weight-semibold);
-}
-
-.eventMeta {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-}
-
 .summary dt {
   margin-top: var(--space-2);
   font-weight: var(--weight-semibold);
@@ -367,6 +340,13 @@
   padding: 0 var(--space-1);
   border: var(--border-width) dashed var(--color-border);
   font-size: var(--text-sm);
+}
+.repeatGlyph {
+  margin-right: var(--space-1);
+}
+.repeatTag {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 .dayTimeList {
   display: flex;

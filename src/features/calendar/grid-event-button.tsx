@@ -9,17 +9,18 @@ export interface GridEventButtonProps {
   readonly className: string;
   readonly style?: CSSProperties;
   readonly onActivate: (key: string) => void;
-  readonly onDelete: (key: string) => void;
+  /** Mobile list: show "Repeats" as a second line instead of only the glyph. */
+  readonly showRepeatsText?: boolean;
 }
 
-/** Focusable block with a visible `Overlap` cue; Delete is an intent, only if not read-only. */
+/** Focusable block with a visible `Overlap` cue and a repeat indicator. */
 export function GridEventButton({
   block,
   clusterSize,
   className,
   style,
   onActivate,
-  onDelete,
+  showRepeatsText = false,
 }: GridEventButtonProps) {
   return (
     <button
@@ -31,14 +32,21 @@ export function GridEventButton({
       onClick={() => {
         if (!block.readOnly) onActivate(block.key);
       }}
-      onKeyDown={(keyboard) => {
-        if (keyboard.key !== 'Delete' || block.readOnly) return;
-        keyboard.preventDefault();
-        onDelete(block.key);
-      }}
     >
-      <span className={styles['eventName']}>{block.label}</span>
+      <span className={styles['eventName']}>
+        {block.repeats ? (
+          <span className={styles['repeatGlyph']} aria-hidden="true">
+            {'\u21BB'}
+          </span>
+        ) : null}
+        {block.label}
+      </span>
       <span className="visually-hidden">, {blockDetail(block, clusterSize)}</span>
+      {block.repeats && showRepeatsText ? (
+        <span className={styles['repeatTag']} aria-hidden="true">
+          Repeats
+        </span>
+      ) : null}
       {clusterSize > 1 ? (
         <span className={styles['overlapTag']} aria-hidden="true">
           Overlap

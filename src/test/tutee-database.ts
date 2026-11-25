@@ -7,6 +7,7 @@ import grantMigration from '../../supabase/migrations/20261125000200_grant_servi
 import versionsMigration from '../../supabase/migrations/20261125000300_calendar_event_versions.sql?raw';
 import sessionMigration from '../../supabase/migrations/20261125000400_timeslot_requests.sql?raw';
 import tuteeMigration from '../../supabase/migrations/20261126000000_tutee_management.sql?raw';
+import recurringMigration from '../../supabase/migrations/20261127000000_recurring_events.sql?raw';
 
 export const ADMIN_ID = '00000000-0000-0000-0000-0000000000a1';
 export const tuteeId = (n: number) => `00000000-0000-0000-0000-${String(n).padStart(12, '0')}`;
@@ -48,6 +49,7 @@ export const MIGRATIONS = {
   versions: versionsMigration,
   session: sessionMigration,
   tutee: tuteeMigration,
+  recurring: recurringMigration,
 } as const;
 
 export type DbRole = 'anon' | 'authenticated' | 'service_role';
@@ -79,7 +81,7 @@ export interface TuteeDatabase {
   close(): Promise<void>;
 }
 
-/** PGlite with every migration up to and including tutee management, plus an admin. */
+/** PGlite with every migration up to and including recurring events, plus recurring events and an admin. */
 export async function createTuteeDatabase(): Promise<TuteeDatabase> {
   const db = new PGlite();
   await db.exec(SUPABASE_STUB);
@@ -90,6 +92,7 @@ export async function createTuteeDatabase(): Promise<TuteeDatabase> {
   await db.exec(MIGRATIONS.versions);
   await db.exec(withoutExtensions(MIGRATIONS.session));
   await db.exec(MIGRATIONS.tutee);
+  await db.exec(MIGRATIONS.recurring);
 
   const seedAdmin = async () => {
     await db.exec(`
@@ -113,6 +116,7 @@ export async function createTuteeDatabase(): Promise<TuteeDatabase> {
         reset role;
         delete from public.session_requests;
         delete from public.calendar_events;
+        delete from public.calendar_event_series;
         delete from public.access_audit_log;
         delete from public.access_request_notifications;
         delete from public.tutor_notification_outbox;

@@ -2,6 +2,21 @@ import { describe, expect, it } from 'vitest';
 import { mapEventRows, mapIntervalRows, mapSupabaseError } from './rows';
 
 describe('mapEventRows', () => {
+  it('maps the series and its stable occurrence index', () => {
+    const result = mapEventRows([
+      {
+        id: 'e1',
+        starts_at: '2026-01-05T10:00:00Z',
+        ends_at: '2026-01-05T11:00:00Z',
+        title: 'Piano',
+        source: 'manual',
+        external_id: null,
+        series_id: 's1',
+        series_index: 3,
+      },
+    ]);
+    expect(result).toMatchObject({ ok: true, value: [{ seriesId: 's1', seriesIndex: 3 }] });
+  });
   it('maps valid rows to canonical domain events', () => {
     const result = mapEventRows([
       {
@@ -88,6 +103,8 @@ describe('mapSupabaseError', () => {
     ['23505', 'conflict'],
     ['22023', 'validation'],
     ['23514', 'validation'],
+    ['40001', 'conflict'],
+    ['P0002', 'not-found'],
     ['08006', 'unavailable'],
     [undefined, 'unavailable'],
   ] as const)('maps %s to %s', (code, kind) => {

@@ -81,7 +81,7 @@ describe('calendar create dialog flow', () => {
     await waitFor(() => {
       expect(cell).toHaveFocus();
     });
-    expect(await screen.findByRole('button', { name: /Delete Piano/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /^Piano/ })).toBeInTheDocument();
   });
 
   it('returns focus to the event after editing it', async () => {
@@ -201,7 +201,7 @@ describe('calendar create dialog flow', () => {
     );
     await userEvent.click(await screen.findByRole('button', { name: 'Save changes' }));
     expect(
-      await screen.findByText('This time changed. Review the times and try again.'),
+      await screen.findByText('This event changed. Review the details and try again.'),
     ).toBeInTheDocument();
     expect(screen.getByRole('dialog', { name: 'Edit blocked time' })).toBeInTheDocument();
   });

@@ -34,7 +34,6 @@ function setup(events: readonly CalendarEvent[] = []) {
     labelId: 'grid-heading',
     onSelect: vi.fn(),
     onActivateBlock: vi.fn(),
-    onDeleteBlock: vi.fn(),
     onShiftWeek: vi.fn(),
   };
   const view = render(
@@ -228,7 +227,6 @@ describe('SelectableTimeGrid on a narrow screen', () => {
           labelId="grid-heading"
           onSelect={vi.fn()}
           onActivateBlock={vi.fn()}
-          onDeleteBlock={vi.fn()}
           onShiftWeek={vi.fn()}
         />
       </>,
@@ -256,7 +254,6 @@ describe('SelectableTimeGrid on a narrow screen', () => {
         labelId="grid-heading"
         onSelect={vi.fn()}
         onActivateBlock={vi.fn()}
-        onDeleteBlock={vi.fn()}
         onShiftWeek={vi.fn()}
       />,
     );

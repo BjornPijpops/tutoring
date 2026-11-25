@@ -17,7 +17,6 @@ export interface TimeGridViewProps {
   /** A block was clicked or activated; carries only its opaque key. */
   readonly onActivateBlock: (key: string) => void;
   /** Delete was pressed on a block that is not read-only; the parent confirms and mutates. */
-  readonly onDeleteBlock: (key: string) => void;
   /** Moves a page: a week on desktop, a day on mobile when crossing the week edge. */
   readonly onShiftWeek: (delta: -1 | 1) => void;
   /** Read-only presentation mode used for anonymous tutee availability. */
@@ -55,5 +54,6 @@ export function blockDetail(block: GridBlock, clusterSize: number): string {
   if (block.kind === 'imported') parts.push('imported from calendar file');
   if (block.kind === 'blocked') parts.push('Not available');
   if (clusterSize > 1) parts.push(`${String(clusterSize)} events overlap`);
+  if (block.repeats) parts.push('repeats');
   return parts.join(', ');
 }

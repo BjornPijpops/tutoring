@@ -23,5 +23,6 @@ export function toGridBlock(event: CalendarEvent): GridBlock {
     label: event.title || 'Blocked time',
     kind: event.source === 'ics' ? 'imported' : 'blocked',
     readOnly: false,
+    ...(event.seriesId ? { repeats: true } : {}),
   };
 }

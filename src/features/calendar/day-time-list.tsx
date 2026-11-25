@@ -23,7 +23,6 @@ export function DayTimeList({
   labelId,
   onSelect,
   onActivateBlock,
-  onDeleteBlock,
   onShiftWeek,
   readOnly = false,
 }: TimeGridViewProps) {
@@ -88,7 +87,7 @@ export function DayTimeList({
                   clusterSize={item.clusterSize}
                   className={styles['listEvent'] ?? ''}
                   onActivate={onActivateBlock}
-                  onDelete={onDeleteBlock}
+                  showRepeatsText
                 />
               ))}
               {cell.state === 'blocked' ? null : (

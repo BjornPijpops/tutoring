@@ -221,17 +221,10 @@ describe('SupabaseCalendarEventRepository', () => {
     });
   });
 
-  it('returns not-found when a delete removes no row', async () => {
-    const client = { from: () => builder({ data: [], error: null }) };
-    const repo = new SupabaseCalendarEventRepository(asClient(client));
-    expect(await repo.removeEvent('x')).toMatchObject({ ok: false, error: { kind: 'not-found' } });
-  });
-
-  it('removes an event and imported events', async () => {
+  it('removes imported events', async () => {
     const calls: { name: string; args: unknown[] }[] = [];
-    const client = { from: () => builder({ data: [{ id: 'e1' }], error: null }, calls) };
+    const client = { from: () => builder({ data: null, error: null }, calls) };
     const repo = new SupabaseCalendarEventRepository(asClient(client));
-    expect((await repo.removeEvent('e1')).ok).toBe(true);
     expect((await repo.removeImportedEvents()).ok).toBe(true);
     expect(calls).toContainEqual({ name: 'eq', args: ['source', 'ics'] });
   });

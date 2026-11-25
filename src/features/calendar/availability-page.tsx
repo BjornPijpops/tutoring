@@ -145,7 +145,6 @@ export function AvailabilityPage() {
             setConfirmingCancel(false);
             setDetail(request);
           }}
-          onDeleteBlock={() => undefined}
           onShiftWeek={(delta) => {
             setWeekStart(addDays(weekStart, delta * 7));
           }}

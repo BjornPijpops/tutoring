@@ -1,6 +1,8 @@
 import { MAX_TITLE_LENGTH, type NewCalendarEvent } from '../../core/domain/calendar-event';
-import { wallTimeToInstant, type IsoDate } from '../../core/domain/local-time';
+import type { EventChanges } from '../../core/domain/event-changes';
+import { isIsoDate, wallTimeToInstant, type IsoDate } from '../../core/domain/local-time';
 import { TUTOR_TIME_ZONE, TUTORING_HOURS } from '../../core/domain/tutoring-hours';
+import type { RepeatBase } from './repeat-form';
 
 export interface CalendarEventFormValues {
   readonly date: string;
@@ -81,4 +83,27 @@ export function valuesForEvent(
   title: string,
 ): CalendarEventFormValues {
   return { date, start: time(start), end: time(end), title };
+}
+
+/** Only the fields of `current` that differ from `initial`, as Brussels wall-clock values. */
+export function changesBetween(
+  initial: CalendarEventFormValues,
+  current: CalendarEventFormValues,
+): EventChanges {
+  const start = minutes(current.start);
+  const end = minutes(current.end);
+  return {
+    ...(current.title.trim() !== initial.title.trim() ? { title: current.title.trim() } : {}),
+    ...(current.date !== initial.date ? { date: current.date } : {}),
+    ...(current.start !== initial.start && start !== undefined ? { startMinutes: start } : {}),
+    ...(current.end !== initial.end && end !== undefined ? { endMinutes: end } : {}),
+  };
+}
+
+/** The date, start and end as the repeat rule needs them; `undefined` while any is invalid. */
+export function repeatBaseOf(values: CalendarEventFormValues): RepeatBase | undefined {
+  const start = minutes(values.start);
+  const end = minutes(values.end);
+  if (!isIsoDate(values.date.trim()) || start === undefined || end === undefined) return undefined;
+  return { date: values.date.trim(), startMinutes: start, endMinutes: end };
 }
