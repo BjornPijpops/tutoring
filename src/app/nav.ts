@@ -24,6 +24,7 @@ export function getNavItems(
     return [
       HOME,
       { to: '/calendar', label: 'Calendar' },
+      { to: '/tutees', label: 'Tutees' },
       sessionPendingCount > 0
         ? { to: '/session-requests', label: 'Requests', pendingCount: sessionPendingCount }
         : { to: '/session-requests', label: 'Requests' },

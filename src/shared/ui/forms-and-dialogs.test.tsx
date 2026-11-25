@@ -63,6 +63,24 @@ describe('Dialog', () => {
 });
 
 describe('ConfirmDialog', () => {
+  it('starts focus on the cancel action even when a checkbox comes first', () => {
+    render(
+      <ConfirmDialog
+        open
+        title="Revoke?"
+        confirmLabel="Revoke"
+        cancelLabel="Keep"
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+      >
+        <label>
+          <input type="checkbox" /> Also
+        </label>
+      </ConfirmDialog>,
+    );
+    expect(screen.getByRole('button', { name: 'Keep' })).toHaveFocus();
+  });
+
   it('confirms and cancels, cancel first in DOM order', async () => {
     const onConfirm = vi.fn();
     const onCancel = vi.fn();

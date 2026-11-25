@@ -142,12 +142,6 @@ export function AccessRequestsPage() {
       () => accessRequests.decide(request.userId, 'denied'),
       `${request.displayName} denied.${left(request.status)}`,
     );
-  const revoke = (request: AccessRequestSummary) =>
-    act(
-      request,
-      () => accessRequests.decide(request.userId, 'denied'),
-      `Access for ${request.displayName} revoked.`,
-    );
   const allowAgain = (request: AccessRequestSummary) =>
     act(
       request,
@@ -208,7 +202,6 @@ export function AccessRequestsPage() {
             now={now}
             onApprove={approve}
             onDeny={deny}
-            onRevoke={revoke}
             onAllowAgain={allowAgain}
             busyIds={busyIds}
             errorById={errorById}

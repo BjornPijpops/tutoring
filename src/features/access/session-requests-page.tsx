@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { useServices } from '../../app/services-context';
 import { toMs } from '../../core/domain/interval';
 import type { SessionDecision, TutorSessionRequest } from '../../core/domain/session-request';
@@ -85,6 +86,9 @@ export function SessionRequestsPage() {
                   ({formatSessionDuration((toMs(item.endsAt) - toMs(item.startsAt)) / 60000)})
                 </span>{' '}
                 <span>Pending</span>{' '}
+                <Link to={`/tutees/${item.userId}`} aria-label={`View tutee ${item.requesterName}`}>
+                  View tutee
+                </Link>{' '}
                 <Button
                   type="button"
                   disabled={busy !== null}

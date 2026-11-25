@@ -27,6 +27,8 @@ export function Dialog({ open, title, onClose, children }: DialogProps) {
     if (open && !dialog.open) {
       opener.current = document.activeElement;
       dialog.showModal();
+      // A dialog may mark its safest control; the browser would otherwise pick the first field.
+      dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus();
     } else if (!open && dialog.open) {
       dialog.close();
       if (opener.current instanceof HTMLElement && opener.current.isConnected) {

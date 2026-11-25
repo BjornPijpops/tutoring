@@ -110,3 +110,4 @@ The client state is a UX cache; **the server stays the source of truth**:
 - Revocation is immediate server-side; the client reflects it on the next fetch.
 - Cost: one extra RPC per session bootstrap (replaces `is_admin`, same count).
 - The 50-pending cap can lock out genuine newcomers during an attack; the tutor clears the queue by denying. Acceptable at this scale.
+- Tutee management (ADR 0012) adds `access_audit_log`. It holds no names, e-mails or messages, has no grants for any role, and cascades with the user, so deleting the Auth user also deletes the decision history (GDPR erasure).

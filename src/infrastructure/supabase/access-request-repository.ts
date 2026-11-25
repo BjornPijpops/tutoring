@@ -13,7 +13,10 @@ const UNAVAILABLE: PortError = {
   kind: 'unavailable',
   message: 'The access service is not available.',
 };
-const UNAUTHENTICATED: PortError = { kind: 'unauthenticated', message: 'You are not signed in.' };
+const UNEXPECTED: PortError = {
+  kind: 'unavailable',
+  message: 'The access service returned unexpected data.',
+};
 
 type Response = {
   readonly data: unknown;
@@ -21,9 +24,10 @@ type Response = {
 };
 
 /**
- * {@link AccessRequestRepository} on the access-request RPCs. All writes and the tutor's list
- * go through security-definer functions; only the caller's own row is read directly (RLS).
- * Every response is validated and errors are mapped, so raw SQL text never reaches the UI.
+ * {@link AccessRequestRepository} on the access-request RPCs. All reads and writes go through
+ * security-definer functions (the tutee cannot read the table: revoked and blocked are
+ * projected to denied on the server). Every response is validated and errors are mapped, so
+ * raw SQL text never reaches the UI.
  */
 export class SupabaseAccessRequestRepository implements AccessRequestRepository {
   constructor(private readonly client: SupabaseClient) {}
@@ -33,22 +37,15 @@ export class SupabaseAccessRequestRepository implements AccessRequestRepository 
   }
 
   async getMine(): PortResult<AccessRequest | null> {
-    try {
-      const { data: auth, error: authError } = await this.client.auth.getSession();
-      const userId = auth.session?.user.id;
-      if (authError || !userId) return err(UNAUTHENTICATED);
-      const response: Response = await this.client
-        .from('access_requests')
-        .select(
-          'user_id,status,message,created_at,requested_at,decided_at,next_request_at,request_count',
-        )
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (response.error) return err(mapAccessError(response.error));
-      return response.data === null ? ok(null) : mapRequestRow(response.data);
-    } catch {
-      return err(UNAVAILABLE);
-    }
+    // The table is not readable by tutees: the RPC projects revoked/blocked to denied.
+    const rows = await this.callRpc('get_my_access_request', {}, (data) =>
+      Array.isArray(data) && data.length === 0
+        ? ok(null)
+        : Array.isArray(data) && data.length === 1
+          ? mapRequestRow(data[0])
+          : err(UNEXPECTED),
+    );
+    return rows;
   }
 
   listRequests(status?: AccessRequestFilter): PortResult<readonly AccessRequestSummary[]> {

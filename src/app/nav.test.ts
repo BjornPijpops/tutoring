@@ -20,8 +20,8 @@ describe('getNavItems', () => {
   });
 
   it('gives the tutor the calendar and requests, with a count only when pending', () => {
-    expect(labels(tutor)).toEqual(['Home', 'Calendar', 'Requests', 'Access requests']);
-    expect(getNavItems(tutor, 3)[3]).toEqual({
+    expect(labels(tutor)).toEqual(['Home', 'Calendar', 'Tutees', 'Requests', 'Access requests']);
+    expect(getNavItems(tutor, 3)[4]).toEqual({
       to: '/access-requests',
       label: 'Access requests',
       pendingCount: 3,
@@ -30,13 +30,13 @@ describe('getNavItems', () => {
   });
 
   it('shows the pending session-request count on Requests only, independent of access requests', () => {
-    expect(getNavItems(tutor, 0, 2)[2]).toEqual({
+    expect(getNavItems(tutor, 0, 2)[3]).toEqual({
       to: '/session-requests',
       label: 'Requests',
       pendingCount: 2,
     });
-    expect(getNavItems(tutor, 0, 2)[3]).not.toHaveProperty('pendingCount');
-    expect(getNavItems(tutor, 5, 0)[2]).not.toHaveProperty('pendingCount');
+    expect(getNavItems(tutor, 0, 2)[4]).not.toHaveProperty('pendingCount');
+    expect(getNavItems(tutor, 5, 0)[3]).not.toHaveProperty('pendingCount');
     expect(getNavItems(tutee('approved'), 0, 4).some((item) => 'pendingCount' in item)).toBe(false);
   });
 });

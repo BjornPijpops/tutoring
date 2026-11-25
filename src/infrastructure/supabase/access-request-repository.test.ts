@@ -16,20 +16,11 @@ const row = {
 
 const summary = { ...row, display_name: 'Alex', email: 'alex@example.test' };
 
-function setup(response: unknown, session: unknown = { user: { id: 'u1' } }) {
+function setup(response: unknown) {
   const rpc = vi.fn().mockResolvedValue(response);
-  const calls: [string, unknown][] = [];
-  const query: Record<string, unknown> = {
-    select: (...args: unknown[]) => (calls.push(['select', args]), query),
-    eq: (...args: unknown[]) => (calls.push(['eq', args]), query),
-    maybeSingle: () => Promise.resolve(response),
-  };
-  const client = {
-    rpc,
-    from: vi.fn(() => query),
-    auth: { getSession: vi.fn().mockResolvedValue({ data: { session }, error: null }) },
-  } as unknown as SupabaseClient;
-  return { repo: new SupabaseAccessRequestRepository(client), rpc, calls };
+  const from = vi.fn();
+  const client = { rpc, from } as unknown as SupabaseClient;
+  return { repo: new SupabaseAccessRequestRepository(client), rpc, from };
 }
 
 describe('SupabaseAccessRequestRepository', () => {
@@ -40,21 +31,47 @@ describe('SupabaseAccessRequestRepository', () => {
     expect(result).toMatchObject({ ok: true, value: { status: 'pending', requestCount: 1 } });
   });
 
-  it('reads only the own row', async () => {
-    const { repo, calls } = setup({ data: row, error: null });
-    expect((await repo.getMine()).ok).toBe(true);
-    expect(calls).toContainEqual(['eq', ['user_id', 'u1']]);
+  it('reads the own request through the projecting RPC, never the table', async () => {
+    const { repo, rpc, from } = setup({ data: [{ ...row, can_ask_again: true }], error: null });
+    const result = await repo.getMine();
+    expect(rpc).toHaveBeenCalledWith('get_my_access_request', {});
+    expect(from).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ ok: true, value: { status: 'pending', canAskAgain: true } });
   });
 
-  it('returns null when there is no request and errors when signed out', async () => {
-    expect(await setup({ data: null, error: null }).repo.getMine()).toEqual({
+  it('returns null when there is no request', async () => {
+    expect(await setup({ data: [], error: null }).repo.getMine()).toEqual({
       ok: true,
       value: null,
     });
-    expect(await setup({ data: null, error: null }, null).repo.getMine()).toMatchObject({
+  });
+
+  it('rejects a response with more than one row', async () => {
+    expect(await setup({ data: [row, row], error: null }).repo.getMine()).toMatchObject({
       ok: false,
-      error: { kind: 'unauthenticated' },
+      error: { kind: 'unavailable' },
     });
+  });
+
+  it('shows a blocked row as denied without a retry date', async () => {
+    const blocked = {
+      ...row,
+      status: 'denied',
+      decided_at: '2026-11-24T10:00:00+00:00',
+      next_request_at: '2026-11-25T10:00:00+00:00',
+      can_ask_again: false,
+    };
+    const result = await setup({ data: [blocked], error: null }).repo.getMine();
+    expect(result).toMatchObject({
+      ok: true,
+      value: { status: 'denied', nextRequestAt: null, canAskAgain: false },
+    });
+  });
+
+  it.each(['revoked', 'blocked'])('projects a leaked %s row to denied', async (status) => {
+    const leaked = { ...row, status, decided_at: '2026-11-24T10:00:00+00:00' };
+    const result = await setup({ data: leaked, error: null }).repo.decide('u1', 'denied');
+    expect(result).toMatchObject({ ok: true, value: { status: 'denied' } });
   });
 
   it('lists requests with the status filter', async () => {
@@ -107,6 +124,8 @@ describe('mapAccessError', () => {
     [{ code: '22023', message: 'x' }, 'validation'],
     [{ code: '23514', message: 'x' }, 'validation'],
     [{ code: '23505', message: 'x' }, 'conflict'],
+    [{ code: 'TR003', message: 'stale access state' }, 'conflict'],
+    [{ code: 'P0001', message: 'access request blocked' }, 'conflict'],
     [{ code: 'XX000', message: 'x' }, 'unavailable'],
   ])('maps %j to %s', (error, kind) => {
     expect(mapAccessError(error).kind).toBe(kind);

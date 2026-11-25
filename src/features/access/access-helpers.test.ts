@@ -25,6 +25,12 @@ describe('getAccessView', () => {
     expect(getAccessView(request({ status: 'approved' }), NOW)).toBe('approved');
   });
 
+  it('shows blocked tutees the denial view without a retry date', () => {
+    expect(
+      getAccessView(request({ status: 'denied', nextRequestAt: null, canAskAgain: false }), NOW),
+    ).toBe('denied-blocked');
+  });
+
   it('keeps a denied tutee waiting until exactly nextRequestAt', () => {
     const denied = request({ status: 'denied', nextRequestAt: '2026-11-24T12:00:00Z' });
     expect(getAccessView(denied, new Date('2026-11-24T11:59:59Z'))).toBe('denied-waiting');

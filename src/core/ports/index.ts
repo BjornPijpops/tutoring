@@ -7,3 +7,4 @@ export type { IcsParseOptions, IcsParser } from './ics-parser';
 export type { Notifier } from './notifier';
 export type { ConflictCode, PortError, PortResult, Unsubscribe } from './port-error';
 export type { SessionRequestRepository } from './session-request-repository';
+export type { TuteeRepository } from './tutee-repository';

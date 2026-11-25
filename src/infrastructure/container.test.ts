@@ -18,6 +18,7 @@ describe('createContainer', () => {
       'icsParser',
       'notifier',
       'sessionRequests',
+      'tutees',
     ]);
     expect(await services.auth.getSession()).toEqual({ ok: true, value: null });
   });

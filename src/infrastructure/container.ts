@@ -8,6 +8,7 @@ import type {
   IcsParser,
   Notifier,
   SessionRequestRepository,
+  TuteeRepository,
 } from '../core/ports';
 import { IcalJsParser } from './ics';
 import {
@@ -18,6 +19,7 @@ import {
   InMemoryCalendarEventRepository,
   InMemoryNotifier,
   InMemorySessionRequestRepository,
+  InMemoryTuteeRepository,
 } from './memory';
 import {
   SupabaseAccessRequestRepository,
@@ -25,6 +27,7 @@ import {
   SupabaseBlockedTimeRepository,
   SupabaseCalendarEventRepository,
   SupabaseSessionRequestRepository,
+  SupabaseTuteeRepository,
   createSupabaseClient,
   supabaseSettings,
 } from './supabase';
@@ -38,6 +41,7 @@ export interface Services {
   readonly blockedTime: BlockedTimeRepository;
   readonly icsParser: IcsParser;
   readonly sessionRequests: SessionRequestRepository;
+  readonly tutees: TuteeRepository;
   readonly notifier: Notifier;
 }
 
@@ -77,6 +81,7 @@ export function createContainer(
     sessionRequests: client
       ? new SupabaseSessionRequestRepository(client)
       : new InMemorySessionRequestRepository({ availability }),
+    tutees: client ? new SupabaseTuteeRepository(client) : new InMemoryTuteeRepository(),
     notifier: new InMemoryNotifier(),
   };
 }

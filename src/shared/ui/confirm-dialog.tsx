@@ -37,7 +37,7 @@ export function ConfirmDialog({
       <div>{children}</div>
       {error ? <StatusMessage status="error">{error}</StatusMessage> : null}
       <div className={styles['actions']}>
-        <Button variant="secondary" onClick={onCancel} disabled={busy}>
+        <Button variant="secondary" onClick={onCancel} disabled={busy} data-autofocus>
           {cancelLabel}
         </Button>
         <Button

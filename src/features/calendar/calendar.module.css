@@ -116,6 +116,7 @@
 }
 
 .todayWord {
+  display: block;
   font-weight: var(--weight-semibold);
 }
 
@@ -267,7 +268,7 @@
 }
 .gridFrame {
   --grid-time: 5.5rem;
-  --grid-head: 2.75rem;
+  --grid-head: 3.5rem;
   --grid-row: 2.75rem;
   position: relative;
   min-width: 46rem;
@@ -284,7 +285,11 @@
 .gridHeader > span {
   box-sizing: border-box;
   height: var(--grid-head);
-  padding: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.25;
   overflow: hidden;
   font-weight: var(--weight-semibold);
   text-align: center;

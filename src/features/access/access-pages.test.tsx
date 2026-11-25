@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
@@ -111,18 +111,16 @@ describe('AccessRequestsPage', () => {
     expect(res.ok && res.value).toHaveLength(1);
   });
 
-  it('asks for confirmation before revoking', async () => {
+  it('offers a Manage link instead of revoking for approved tutees', async () => {
     const user = userEvent.setup();
     const repo = createAccessServices(null).repo;
     await repo.as(OTHER).requestAccess('');
     await repo.decide(OTHER.id, 'approved');
     renderAccess(TUTOR, '/access-requests', repo);
     await user.click(await screen.findByRole('button', { name: /Approved/ }));
-    await user.click(await screen.findByRole('button', { name: /^Revoke access for / }));
-    const dialog = await screen.findByRole('dialog');
-    await user.click(within(dialog).getByRole('button', { name: 'Keep access' }));
-    const res = await repo.listRequests('approved');
-    expect(res.ok && res.value).toHaveLength(1);
+    const manage = await screen.findByRole('link', { name: /^Manage / });
+    expect(manage).toHaveAttribute('href', `/tutees/${OTHER.id}`);
+    expect(screen.queryByRole('button', { name: /^Revoke access/ })).toBeNull();
   });
 
   it('renders messages as text only', async () => {

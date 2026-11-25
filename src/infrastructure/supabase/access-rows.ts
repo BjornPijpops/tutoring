@@ -7,16 +7,19 @@ import type { PortError } from '../../core/ports';
 
 const timestamp = z.string().refine((value) => Number.isFinite(Date.parse(value)));
 const status = z.enum(['pending', 'approved', 'denied']);
+// Rows from get_my_access_request and decide_access_request may carry the tutor-side values.
+const anyStatus = z.enum(['pending', 'approved', 'denied', 'revoked', 'blocked']);
 
 const requestRowSchema = z.object({
   user_id: z.string().min(1),
-  status,
+  status: anyStatus,
   message: z.string(),
   created_at: timestamp,
   requested_at: timestamp,
   decided_at: timestamp.nullable(),
   next_request_at: timestamp.nullable(),
   request_count: z.number().int().min(1),
+  can_ask_again: z.boolean().optional(),
 });
 
 const summaryRowSchema = z.object({
@@ -49,16 +52,20 @@ export function mapRequestRow(row: unknown): Result<AccessRequest, PortError> {
   const parsed = requestRowSchema.safeParse(row);
   if (!parsed.success) return err(MALFORMED);
   const data = parsed.data;
+  // Defence in depth: revoked and blocked are never shown to the tutee, only "denied".
+  const blocked = data.status === 'blocked' || data.can_ask_again === false;
+  const projected = data.status === 'revoked' || data.status === 'blocked' ? 'denied' : data.status;
   return ok({
     id: data.user_id,
     userId: data.user_id,
-    status: data.status,
+    status: projected,
     message: data.message,
     createdAt: canonical(data.created_at),
     requestedAt: canonical(data.requested_at),
     decidedAt: canonicalOrNull(data.decided_at),
-    nextRequestAt: canonicalOrNull(data.next_request_at),
+    nextRequestAt: blocked ? null : canonicalOrNull(data.next_request_at),
     requestCount: data.request_count,
+    canAskAgain: !blocked,
   });
 }
 
@@ -112,6 +119,7 @@ export function mapAccessError(error: {
     case '22023':
     case '23514':
       return { kind: 'validation', message: 'The access service rejected the input.' };
+    case 'TR003':
     case '23505':
       return {
         kind: 'conflict',
@@ -132,6 +140,9 @@ function mapRaisedConflict(message: string): PortError {
       code: 'access_requests_closed',
       message: 'Access requests are paused.',
     };
+  }
+  if (message.includes('blocked')) {
+    return { kind: 'conflict', code: 'access_blocked', message: 'This request cannot be sent.' };
   }
   if (message.includes('cooldown active')) {
     return { kind: 'conflict', code: 'cooldown_active', message: 'You cannot ask again yet.' };

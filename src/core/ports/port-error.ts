@@ -6,7 +6,8 @@ export type ConflictCode =
   | 'cooldown_active'
   | 'state_conflict'
   | 'schedule_unavailable'
-  | 'pending_limit';
+  | 'pending_limit'
+  | 'access_blocked';
 
 /** Why a port call failed; adapters map backend errors onto these kinds. */
 export interface PortError {

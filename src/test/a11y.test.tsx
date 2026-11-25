@@ -83,7 +83,7 @@ describe('accessibility (axe)', () => {
     await expectNoViolations(denied.container);
   });
 
-  it('access requests page with a list and the revoke dialog', async () => {
+  it('access requests page with a list and the Manage link', async () => {
     const { services, repo } = createAccessServices(TUTOR);
     await repo.as({ id: 'a', role: 'tutee' }).requestAccess('Hi');
     await repo.as({ id: 'b', role: 'tutee' }).requestAccess('');
@@ -92,8 +92,8 @@ describe('accessibility (axe)', () => {
     await screen.findByRole('button', { name: /^Approve / });
     await expectNoViolations(container);
     await userEvent.click(screen.getByRole('button', { name: /Approved/ }));
-    await userEvent.click(await screen.findByRole('button', { name: /^Revoke access for / }));
-    await expectNoViolations(await screen.findByRole('dialog'));
+    await screen.findByRole('link', { name: /^Manage / });
+    await expectNoViolations(container);
   });
 
   it('layout with the tutor navigation and pending badge', async () => {

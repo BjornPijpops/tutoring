@@ -7,3 +7,5 @@ export { InMemoryCalendarEventRepository } from './in-memory-calendar-event-repo
 export { InMemoryNotifier } from './in-memory-notifier';
 export { InMemorySessionRequestRepository } from './in-memory-session-request-repository';
 export { fixedClock, sequentialIds } from './support';
+
+export { InMemoryTuteeRepository } from './in-memory-tutee-repository';

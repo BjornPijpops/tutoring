@@ -12,6 +12,8 @@ import { CalendarPage } from '../features/calendar/calendar-page';
 import { HomePage } from '../features/home/home-page';
 import { NotFoundPage } from '../features/not-found/not-found-page';
 import { Layout } from './layout';
+import { TuteesPage } from '../features/tutees/tutees-page';
+import { TuteeDetailPage } from '../features/tutees/tutee-detail-page';
 
 /** Route table; page titles live in `route-meta.ts`. */
 export function AppRoutes() {
@@ -57,6 +59,30 @@ export function AppRoutes() {
               noAccessText="Session requests are only available to the tutor."
             >
               <SessionRequestsPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="tutees"
+          element={
+            <RequireRole
+              requiredRole="tutor"
+              heading="Tutees"
+              noAccessText="Tutees are only available to the tutor."
+            >
+              <TuteesPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="tutees/:userId"
+          element={
+            <RequireRole
+              requiredRole="tutor"
+              heading="Tutee"
+              noAccessText="Tutees are only available to the tutor."
+            >
+              <TuteeDetailPage />
             </RequireRole>
           }
         />

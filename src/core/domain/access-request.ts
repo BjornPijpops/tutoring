@@ -25,6 +25,11 @@ export interface AccessRequest {
   readonly nextRequestAt: IsoDateTime | null;
   /** How many times the tutee has asked. */
   readonly requestCount: number;
+  /**
+   * `false` when the tutor blocked the tutee: the request shows as denied without a retry
+   * date. Absent or `true` otherwise. The tutee never learns the word "blocked".
+   */
+  readonly canAskAgain?: boolean;
 }
 
 /** A request as the tutor sees it, including who asked. */

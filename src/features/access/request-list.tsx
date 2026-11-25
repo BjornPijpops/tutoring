@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { Link } from 'react-router';
 import type { AccessRequestSummary } from '../../core/domain/access-request';
-import { Button, ConfirmDialog, EmptyState } from '../../shared/ui';
+import { Button, EmptyState } from '../../shared/ui';
 import styles from './access.module.css';
 import { formatCooldown } from './format-cooldown';
 import { RequestCard, requestHeadingId } from './request-card';
@@ -27,7 +28,6 @@ export interface RequestListProps {
   now: Date;
   onApprove: (request: AccessRequestSummary) => Promise<boolean>;
   onDeny: (request: AccessRequestSummary) => Promise<boolean>;
-  onRevoke: (request: AccessRequestSummary) => Promise<boolean>;
   onAllowAgain: (request: AccessRequestSummary) => Promise<boolean>;
   busyIds: ReadonlySet<string>;
   errorById: Readonly<Record<string, string>>;
@@ -43,7 +43,6 @@ export function RequestList({
   now,
   onApprove,
   onDeny,
-  onRevoke,
   onAllowAgain,
   busyIds,
   errorById,
@@ -51,9 +50,6 @@ export function RequestList({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previous = useRef<readonly AccessRequestSummary[]>(requests);
   const focusIndex = useRef<number | null>(null);
-  const [revoking, setRevoking] = useState<AccessRequestSummary | null>(null);
-  const [revokeError, setRevokeError] = useState<string | undefined>();
-  const [revokeBusy, setRevokeBusy] = useState(false);
 
   useEffect(() => {
     if (previous.current !== requests) {
@@ -62,27 +58,13 @@ export function RequestList({
       if (removedAt >= 0) focusIndex.current = removedAt;
       previous.current = requests;
     }
-    // Wait for the revoke dialog to finish closing, it would take focus back otherwise.
-    if (focusIndex.current !== null && revoking === null) {
+    if (focusIndex.current !== null) {
       const next = requests[Math.min(focusIndex.current, requests.length - 1)];
       const target = next ? document.getElementById(requestHeadingId(next.userId)) : null;
       (target ?? headingRef.current)?.focus();
       focusIndex.current = null;
     }
-  }, [requests, revoking]);
-
-  const confirmRevoke = async () => {
-    if (!revoking) return;
-    setRevokeBusy(true);
-    const worked = await onRevoke(revoking);
-    setRevokeBusy(false);
-    if (worked) {
-      setRevokeError(undefined);
-      setRevoking(null);
-    } else {
-      setRevokeError("We couldn't revoke access. Try again.");
-    }
-  };
+  }, [requests]);
 
   const actionsFor = (request: AccessRequestSummary) => {
     const busy = busyIds.has(request.userId);
@@ -114,17 +96,9 @@ export function RequestList({
     }
     if (tab === 'approved') {
       return (
-        <Button
-          variant="secondary"
-          disabled={busy}
-          aria-label={`Revoke access for ${name}`}
-          onClick={() => {
-            setRevokeError(undefined);
-            setRevoking(request);
-          }}
-        >
-          Revoke access
-        </Button>
+        <Link to={`/tutees/${request.userId}`} aria-label={`Manage ${name}`}>
+          Manage
+        </Link>
       );
     }
     const cooldown = formatCooldown(now, request.nextRequestAt);
@@ -180,20 +154,6 @@ export function RequestList({
           ))}
         </ul>
       )}
-      <ConfirmDialog
-        open={revoking !== null}
-        title={`Revoke access for ${revoking?.displayName ?? ''}?`}
-        confirmLabel="Revoke access"
-        cancelLabel="Keep access"
-        busy={revokeBusy}
-        error={revokeError}
-        onConfirm={confirmRevoke}
-        onCancel={() => {
-          setRevoking(null);
-        }}
-      >
-        {`${revoking?.displayName ?? 'They'} will no longer see your availability. They can ask again after 8 hours, unless you allow it sooner.`}
-      </ConfirmDialog>
     </section>
   );
 }

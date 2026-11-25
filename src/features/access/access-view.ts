@@ -2,7 +2,8 @@ import type { AccessRequest } from '../../core/domain/access-request';
 import { toMs } from '../../core/domain/interval';
 
 /** What the tutee's `/access` page shows for their request. */
-export type AccessView = 'form' | 'pending' | 'approved' | 'denied-waiting' | 'denied-can-ask';
+export type AccessView =
+  'form' | 'pending' | 'approved' | 'denied-waiting' | 'denied-can-ask' | 'denied-blocked';
 
 /**
  * Chooses the view for a request (`null` = never asked). A denial lets the tutee ask again
@@ -12,6 +13,7 @@ export function getAccessView(request: AccessRequest | null, now: Date): AccessV
   if (request === null) return 'form';
   if (request.status === 'pending') return 'pending';
   if (request.status === 'approved') return 'approved';
+  if (request.canAskAgain === false) return 'denied-blocked';
   const waitsUntil = request.nextRequestAt === null ? null : toMs(request.nextRequestAt);
   return waitsUntil === null || waitsUntil <= now.getTime() ? 'denied-can-ask' : 'denied-waiting';
 }

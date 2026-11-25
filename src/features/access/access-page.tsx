@@ -20,6 +20,7 @@ const TITLES = {
   approved: 'You have access',
   'denied-waiting': 'No access right now',
   'denied-can-ask': 'No access right now',
+  'denied-blocked': 'No access right now',
 } as const;
 
 function accessEnded(state: unknown): boolean {

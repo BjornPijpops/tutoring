@@ -76,6 +76,20 @@ export function AccessStatusView({
     );
   }
 
+  if (view === 'denied-blocked') {
+    return (
+      <div className={styles['stack']}>
+        <Heading focus={focusHeading}>Not approved at this time</Heading>
+        <StatusMessage status="warning">
+          The tutor has not given you access right now.
+        </StatusMessage>
+        <p className={styles['muted']}>
+          If you think this is a mistake, contact the tutor directly.
+        </p>
+      </div>
+    );
+  }
+
   const cooldown = formatCooldown(now, request.nextRequestAt);
   return (
     <div className={styles['stack']}>
